@@ -54,10 +54,7 @@
                         window.currentCardIndex = 4
                     }
                     let index = window.cardIndices[window.currentCardIndex]
-                    if(index < 10){
-                        index = '0'+index
-                    }
-                    $('#current-card').html(`<img src="image/export_${index}.jpg" />`)
+                    $('#current-card').html(`<img src="image/${index}.jpg" />`)
                     window.logAction("Drawing the next automa card")
                     window.currentCardIndex += 1
                 }
