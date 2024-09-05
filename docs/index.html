@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <!--
+        <script src="js/jquery-3.7.1.js"></script>
+        <link rel="stylesheet" href="css/index.css">
+        -->
+        <script src="file:///K:/board-game/power-grid/automa/repo/docs/js/jquery-3.7.1.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
+        <link rel="stylesheet" href="file:///K:/board-game/power-grid/automa/repo/docs/css/index.css">
+    </head>
+    <body>
+        <h1 id="title">Frida - Power Grid Automa</h1>
+        <div id="game-actions">
+            <button onclick="window.drawAutomaCard()">Draw Next Card</button>
+        </div>
+        <div id="automa-container">
+            <div id="current-card" class="layered-images"></div>
+            <h4 id="log-header">Automa Log</h4>
+            <div id="automa-log">
+                <p id="last-action"></p>
+            </div>
+        </div>
+        <script>
+            $(function(){
+                window.cardIndices = Array(24).fill(1).map((e,i)=>e+(i*1));
+                window.cardIndices = _.shuffle(window.cardIndices)
+                window.currentCardIndex = 4
+                window.currentLog = ''
+
+                window.clearLog = ()=>{
+                    window.currentLog = ''
+                    $("#last-action").html(window.currentLog)
+                }
+
+                window.logAction = (action)=>{
+                    if(window.currentLog !== ''){
+                        window.currentLog += ' '+action
+                    }
+                    else {
+                        window.currentLog += action
+                    }
+                    $("#last-action").html(window.currentLog)
+                }
+
+
+
+                window.drawAutomaCard = ()=>{
+                    window.clearLog()
+                    if(window.currentCardIndex > 23){
+                        window.logAction("Only four cards remain in the deck. Shuffle the discard back into the deck.")
+                        window.cardIndices = _.shuffle(window.cardIndices)
+                        window.currentCardIndex = 4
+                    }
+                    let index = window.cardIndices[window.currentCardIndex]
+                    if(index < 10){
+                        index = '0'+index
+                    }
+                    $('#current-card').html(`<img src="image/export_${index}.jpg" />`)
+                    window.logAction("Drawing the next automa card")
+                    window.currentCardIndex += 1
+                }
+            })
+        </script>
+    </body>
+</html>
