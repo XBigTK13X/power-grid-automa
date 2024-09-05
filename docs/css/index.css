@@ -3,8 +3,9 @@ body {
 }
 
 img {
-    height: 40vh;
+    height: 50vh;
     margin: 1vw;
+    border-radius:5%;
 }
 
 button {
