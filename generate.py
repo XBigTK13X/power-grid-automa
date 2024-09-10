@@ -132,28 +132,6 @@ for ii in range(0,deck_count):
     card['market4'] = market[3]
 
     passer = None if not -1 in market else market.index(-1) + 1
-    # if passer:
-    #     market = list(market_perms[ii % len(low_market_perms)])
-    #     if passer == 4:
-    #         card['market1'] = market[0]
-    #         card['market2'] = market[1]
-    #         card['market3'] = market[2]
-    #         card['market4'] = -1
-    #     if passer == 3:
-    #         card['market1'] = market[0]
-    #         card['market2'] = market[1]
-    #         card['market3'] = -1
-    #         card['market4'] = market[2]
-    #     if passer == 2:
-    #         card['market1'] = market[0]
-    #         card['market2'] = -1
-    #         card['market3'] = market[1]
-    #         card['market4'] = market[2]
-    #     if passer == 1:
-    #         card['market1'] = -1
-    #         card['market2'] = market[0]
-    #         card['market3'] = market[1]
-    #         card['market4'] = market[2]
     base_ante = ante[ii % len(ante)]
     antes = []
     for jj in range(0,len(market)):
@@ -199,33 +177,6 @@ for ii in range(0,deck_count):
     card['compass_direction'] = compass_lookup[compass[ii % len(compass)]][1]
     dir = f'{builds[ii % len(builds)]+4} {compass_lookup[compass[ii % len(compass)]][1]}'
     card['compass_display'] = dir
-    # build_order = [1,2,3]
-    # build = builds[ii % len(builds)]
-    # card['build'] = build
-    # if build == 0 or build == 1 or build == 2:
-    # if build == 1 or build == 2:
-    #     builder = builders[build_one_index]
-    #     build_order.append(builder)
-    #     build_one_index += 1
-    #     if build_one_index > len(builders)-1:
-    #         build_one_index = 0
-    # if build == 2:
-    #     builder = builders[build_one_index]
-    #     build_order.append(builder)
-    #     build_one_index += 1
-    #     if build_one_index > len(builders)-1:
-    #         build_one_index = 0
-    # build_order.sort()
-    # if len(build_order) < 5:
-    #     build_order.append(0)
-    # if len(build_order) < 6:
-    #     build_order.append(0)
-    # card['build1'] = build_order[0]
-    # card['build2'] = build_order[1]
-    # card['build3'] = build_order[2]
-    # card['build4'] = build_order[3]
-    # card['build5'] = build_order[4]
-    # card['build6'] = build_order[5]
     build = manual_builds[ii % len(manual_builds)]
     card['build'] = sum(1 for ii in build if ii > 1)
     card['build1'] = build[0]
