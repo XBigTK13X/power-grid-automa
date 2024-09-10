@@ -82,15 +82,15 @@ def play_game(cards):
                 automa.build_houses(game_map,step)
 
         automa_score += automa.get_build_score()
-        if automa_score > 7 and step == 1:
-            step = 2
-
-        print(f"automa score {automa_score}")
+        human_score = human.houses
+        if step == 1:
+            if automa_score > 7 or human_score > 7:
+                step = 2
 
         # Phase 5 - Bureaucracy
         automa.reset_indices()
         game_map.resource_market.refill_phase(step)
-
+        human.power_cities()
         if step == 1 or step == 2:
             if plant_market.cycle_highest():
                 step = 3
@@ -98,7 +98,9 @@ def play_game(cards):
             plant_market.remove_lowest()
         first_turn = False
         turn_count += 1
-        print(f"Finished turn {turn_count}")
+        print(f"Finished turn {turn_count} on step {step}")
+        print(f"automa score {automa_score}")
+        print(f"human score {human_score}")
     automa.debug()
     human.debug()
     print(f"Automa score {automa_score}")

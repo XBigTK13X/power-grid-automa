@@ -1,6 +1,8 @@
 from copy import deepcopy
 import random
 
+DEBUG_PHASE_4 = False
+
 us_map = {
     'refill':[
         [5,4,3,2],
@@ -203,7 +205,8 @@ power_payouts = {
     1: 22,
     2: 33,
     3: 44,
-    5: 54,
+    4: 54,
+    5: 64,
     6: 73,
     7: 82,
     8: 90,
@@ -238,6 +241,9 @@ direction_lookup = {
     'w': Direction('w','e','nw','sw'),
     'nw': Direction('nw','se','n','w')
 }
+
+def random_direction():
+    return random.choice(list(direction_lookup.keys()))
 
 
 class ResourceRow:
@@ -406,7 +412,7 @@ class Connection:
         print(f"  -> move {self.direction} to {self.destination} for {self.cost}")
 
 class ConnectionPath:
-    def __init__(self,first_city:City):
+    def __init__(self,first_city:City=None):
         self.cities = [first_city]
         self.city_lookup = {}
         self.city_lookup[first_city.name] = True
@@ -429,6 +435,7 @@ class ConnectionPath:
 class GameMap:
     def __init__(self,definition:dict):
         self.definition = definition
+        self.max_connections = 7
         self.city_lookup = {}
         for city in self.definition['cities']:
             self.city_lookup[city[1]] = City(city[0],city[1],city[2])
@@ -454,7 +461,7 @@ class GameMap:
                 sys.exit(1)
 
     def walk_connections(self,direction,max_distance,step,connection_path):
-        if connection_path.length() >= max_distance:
+        if connection_path.length() >= max_distance or connection_path.tip().has_open_site(step):
             return [connection_path]
         results = []
         dir_check = 8
@@ -475,45 +482,20 @@ class GameMap:
         return self.city_lookup[city]
 
     def next_automa_city(self,direction:str,build_target:City,step:int):
-        connection_paths = self.walk_connections(direction,3,step,ConnectionPath(build_target))
+        connection_paths = self.walk_connections(direction,self.max_connections,step,ConnectionPath(build_target))
         if len(connection_paths) == 0:
             return None
+        connection_paths[0].tip().build_house('automa')
         return connection_paths[0].tip()
 
-    # def next_automa_city_legacy(self,direction:str,build_target:City,step:int):
-    #     card_direction = direction
-    #     next_direction = direction
-    #     next_destination = build_target
-    #     attempts = 100
-    #     walked = {}
-    #     walked[next_destination.name] = True
-    #     while attempts > 0:
-    #         if next_destination.name != build_target.name:
-    #             print(f"Check for open sites at {next_destination.name}")
-    #             if next_destination.has_open_site(step):
-    #                 print(f"Building at {next_destination.name}")
-    #                 next_destination.build_house('automa')
-    #                 return next_destination
-    #         lookahead = next_destination.get_connection(next_direction)
-    #         potential = None
-    #         if lookahead:
-    #             potential = self.city_lookup[lookahead.destination]
-    #         if not lookahead:
-    #             next_direction = direction_lookup[next_direction].next
-    #             print(f"Lookahead empty, change direction to {next_direction}")
-    #         else:
-    #             if not potential.name in walked and potential.has_open_site(step):
-    #                 next_direction = card_direction
-    #                 next_destination = potential
-    #                 print(f"Lookahead found, changing destination to {next_destination.name}")
-    #             else:
-    #                 print(f"Lookahead full, change direction to {next_direction}")
-    #                 next_direction = direction_lookup[next_direction].next
-    #         attempts -= 1
-    #     return None
+    def first_human_city(self):
+        direction = random_direction()
+        connection_paths = self.walk_connections(direction,self.max_connections,1,ConnectionPath(self.city_lookup['kansas city']))
+        return connection_paths[0].tip(),connection_paths[0].cost
 
-    def build_human_city(self):
-        pass
+    def next_human_city(self,direction,human_target,step):
+        connection_paths = self.walk_connections(direction,self.max_connections,step,ConnectionPath(human_target))
+        return connection_paths[0].tip(),connection_paths[0].cost
 
 class Plant:
     def __init__(self,definition:dict):
@@ -542,8 +524,9 @@ class PlantMarket:
     def refill(self):
         if len(self.market) < 8 and len(self.cards) > 0:
             next_card = self.cards.pop(0)
-            self.market.append(next_card)
-            self.market = sorted(self.market,key=lambda xx: xx.cost)
+            if not next_card.is_step_3:
+                self.market.append(next_card)
+                self.market = sorted(self.market,key=lambda xx: xx.cost)
             return next_card.is_step_3
         False
 
@@ -565,7 +548,8 @@ class PlantMarket:
         return self.refill()
 
     def remove_lowest(self):
-        self.market.pop(0)
+        if len(self.market) > 0:
+            self.market.pop(0)
 
     def has_plant(self,index):
         return len(self.market) > index
@@ -665,17 +649,23 @@ class Automa:
 
     def build_houses(self,game_map,step):
         direction = self.phase_cards[2].build_direction.lower()
-        print(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
+        if DEBUG_PHASE_4:
+            print(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
         last_city = None
         houses_to_place = self.phase_cards[2].city_build[self.build_index]
         for ii in range(0,houses_to_place):
-            print(f'Automa placing house {ii+1} of {houses_to_place}')
+            if DEBUG_PHASE_4:
+                print(f'Automa placing house {ii+1} of {houses_to_place}')
             if self.houses == 0:
                 self.build_target = game_map.first_automa_city(direction)
-                print(f'Automa first city is {self.build_target.name}')
+                if DEBUG_PHASE_4:
+                    print(f'Automa first city is {self.build_target.name}')
                 self.houses += 1
             else:
                 last_city = game_map.next_automa_city(direction,self.build_target,step)
+                if last_city:
+                    if DEBUG_PHASE_4:
+                        print(f'Automa built in {last_city.name}')
                 self.houses += 1
         if last_city:
             self.build_target = last_city
@@ -692,6 +682,7 @@ class Human:
             'nuke': 0
         }
         self.houses = 0
+        self.cities = []
 
     def purchase_plant(self,plant_market,new_plant,ante,can_ignore=True):
         if not can_ignore:
@@ -741,20 +732,73 @@ class Human:
                 continue
             if houses_served >= self.houses:
                 break
-            if self.resources[plant.resource_kind] - claimed[plant.resource_amount] < plant.resource_amount :
-                amount_to_buy = plant.resource_amount - (self.resources[plant.resource_kind] - claimed[plant.resource_kind])
-                cost_to_buy,quantity_bought = resource_market.find_cost_to_buy(plant.resource_kind,amount_to_buy)
+            # TODO Handle oil/coal properly
+            resource_to_claim = plant.resource_kind
+            if plant.resource_kind == 'oil/coal':
+                resource_to_claim = random.choice(['oil','coal'])
+            if self.resources[resource_to_claim] - claimed[resource_to_claim] < plant.resource_amount :
+                amount_to_buy = plant.resource_amount - (self.resources[resource_to_claim] - claimed[resource_to_claim])
+                cost_to_buy,quantity_bought = resource_market.cost_to_buy(resource_to_claim,amount_to_buy)
                 if quantity_bought >= amount_to_buy:
-                    orders.append({'plant': plant,'kind':plant.resource_kind,'amount':amount_to_buy,'cost': cost_to_buy})
+                    orders.append({'plant': plant,'kind':resource_to_claim,'amount':amount_to_buy,'cost': cost_to_buy})
                     houses_served += plant.power_output
-                    claimed[plant.resource_kind] += plant.resource_amount
+                    claimed[resource_to_claim] += plant.resource_amount
         self.plants.reverse()
         for order in orders:
             if self.money >= order['cost']:
                 purchased,self.money,taken = resource_market.purchase(order['kind'],order['amount'],self.money)
+                self.resources[order['kind']] += taken
 
     def build_houses(self,game_map,step):
-        game_map.build_human_city()
+        if self.houses == 0:
+            destination,money = game_map.first_human_city()
+            destination.build_house('player1')
+            self.cities.append(destination)
+            self.houses += 1
+        else:
+            can_afford = True
+            built = False
+            while can_afford:
+                destination = random.choice(self.cities)
+                direction = random_direction()
+                target,cost = game_map.next_human_city(direction,destination,step)
+                if cost < self.money:
+                    if DEBUG_PHASE_4:
+                        print(f'Human building in {target.name} for ${cost}')
+                    target.build_house('player1')
+                    self.cities.append(target)
+                    self.houses += 1
+                    self.money -= cost
+                    built = True
+                else:
+                    can_afford = False
+            if not built:
+                if DEBUG_PHASE_4:
+                    print(f'Human cannot afford to build this turn')
+
+    def power_cities(self):
+        max_powered = self.houses
+        powered = 0
+        power_plants = sorted(self.plants,key=lambda xx: xx.power_output)
+        power_plants.reverse()
+        for plant in power_plants:
+            if plant.resource_kind == 'wind':
+                powered += plant.power_output
+                continue
+            if powered < max_powered:
+                # TODO properly handle oil/coal
+                resource_kind = plant.resource_kind
+                if plant.resource_kind == 'oil/coal':
+                    resource_kind = 'oil' if self.resources['oil'] > self.resources['coal'] else 'coal'
+                if self.resources[resource_kind] > plant.resource_amount:
+                    self.resources[resource_kind] -= plant.resource_amount
+                    powered += plant.power_output
+        if powered > max_powered:
+            powered = max_powered
+        print(f'Human powered {powered} cities and made {power_payouts[powered]} money')
+        self.money += power_payouts[powered]
+
+
 
 def fresh_automa(automa_definitions):
     return Automa([AutomaCard(x) for x in automa_definitions])
