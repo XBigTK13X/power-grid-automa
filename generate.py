@@ -248,6 +248,8 @@ hits = [0,0,0,0,0]
 for market in manual_markets:
     for hit in market:
         hits[hit] += 1
+
+print("==Automa deck stats==")
 print("Market distribution")
 print(hits)
 
@@ -264,7 +266,8 @@ for builds in manual_builds:
         hits[hit] += 1
 print("build distribution")
 print(hits)
-
-simulate.play_games(cards,1)
+print('\n\n')
 print(f"The longest the automa will take is {low_turn} turns")
 print(f"The shortest the automa will take is {high_turn} turns")
+
+simulate.play_games(cards,1000)

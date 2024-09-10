@@ -1,7 +1,11 @@
 from copy import deepcopy
 import random
 
-DEBUG_PHASE_4 = False
+DEBUG_GAME=False
+
+def debug_game(message):
+    if DEBUG_GAME:
+        print(message)
 
 us_map = {
     'refill':[
@@ -253,42 +257,62 @@ class ResourceRow:
         self.row = []
         for ii in range(0,bins):
             self.row.append(0)
-        self.index = 0
+        self.index = bins-1
         self.bin_size = per_bin
         self.refill_rates = None
         self.quantity = bins * per_bin
-        self.quantity_max = 30 if kind != 'nuke' else 12
+        self.quantity_max = 24 if kind != 'nuke' else 12
+        self.bin_count = bins
 
     def first_fill(self,amount):
-        for ii in range(0,len(self.row)):
-            if ii >= amount:
-                if self.index == -1:
-                    self.index = ii
-                self.row[ii] = self.bin_size
+        while self.costs[self.index] > amount:
+            self.row[self.index] = self.bin_size
+            self.index -= 1
+        if self.costs[self.index] >= amount:
+            self.row[self.index] = self.bin_size
+        if self.index < 0:
+            self.index = 0
 
     def take_one(self,money):
-        if self.index >= len(self.row):
+        if self.index >= 0 and self.index < self.bin_count and self.row[self.index] <= 0:
+            self.index += 1
+        if self.index >= self.bin_count:
             return False,money
         if money < self.costs[self.index]:
             return False,money
-        self.row[self.index] -= 1
         money -= self.costs[self.index]
-        if self.row[self.index] <= 0:
-            self.index += 1
+        self.row[self.index] -= 1
         self.quantity -= 1
         return True,money
 
     def put_one(self):
-        #print(self.kind)
-        #print(self.index)
-        #print(self.bin_size)
-        #print(self.row)
-        if self.quantity >= self.quantity_max or self.index < 0 or self.index >= len(self.row):
-            return
+        # #print(self.kind)
+        # #print(self.index)
+        # #print(self.bin_size)
+        # #print(self.row)
+        # if self.index >= self.bin_count:
+        #     self.index = self.bin_count - 1
+        # if self.row[self.index] >= self.bin_size:
+        #     self.index -= 1
+        #     if self.index < 0:
+        #         self.index = -1
+        # if self.index >= self.bin_size or self.index < 0:
+        #     return
+        # if self.index >= self.bin_count:
+        #     self.index = self.bin_count - 1
+        # self.row[self.index] += 1
+        # self.quantity += 1
+        if self.index < 0:
+            return False
+        if self.index >= self.bin_count:
+            self.index = self.bin_count -1
         if self.row[self.index] >= self.bin_size:
             self.index -= 1
+        if self.index < 0:
+            return False
         self.row[self.index] += 1
         self.quantity += 1
+        return True
 
 
     def set_refill_rates(self,step_1,step_2,step_3):
@@ -305,6 +329,9 @@ class ResourceRow:
 
     def current_cost(self):
         return self.costs[self.index]
+
+    def debug(self):
+        debug_game(f'{self.row}<-{self.kind}')
 
 class ResourceMarket:
     def __init__(self):
@@ -327,15 +354,13 @@ class ResourceMarket:
         resource_row = None
         if kind == 'wind':
             return True,money
-        if kind == 'oil/coal':
-            resource_row = getattr(self,'coal')
-        else:
-            resource_row = getattr(self,kind)
         purchased = True
         taken = 0
         while purchased and taken < amount:
             if kind == 'oil/coal':
                 resource_row = self.coal if self.coal.current_cost() < self.oil.current_cost() else self.oil
+            else:
+                resource_row = getattr(self,kind)
             purchased,money = resource_row.take_one(money)
             taken += 1
         return purchased,money,taken
@@ -357,6 +382,12 @@ class ResourceMarket:
         purchased,money,taken = self.purchase(kind,amount,10000)
         setattr(self,kind,row_backup)
         return 10000-money,taken
+
+    def debug(self):
+        self.coal.debug()
+        self.oil.debug()
+        self.trash.debug()
+        self.nuke.debug()
 
 
 class City:
@@ -385,8 +416,10 @@ class City:
         self.connections[connection.direction] = connection
         self.added_connection_count += 1
 
-    def build_house(self,builder):
+    def build_house(self,builder,step):
+        cost = self.build_cost(step,builder)
         self.sites.append(builder)
+        return cost
 
     def has_open_site(self,step):
         return len(self.sites) < step
@@ -397,8 +430,8 @@ class City:
         return None
 
     def debug(self):
-        print(f"City {self.name} should have {self.connection_count} connections")
-        print("Connection list")
+        debug_game(f"City {self.name} should have {self.connection_count} connections")
+        debug_game("Connection list")
         for k,v in self.connections.items():
             v.debug()
 
@@ -409,7 +442,7 @@ class Connection:
         self.cost = int(cost)
 
     def debug(self):
-        print(f"  -> move {self.direction} to {self.destination} for {self.cost}")
+        debug_game(f"  -> move {self.direction} to {self.destination} for {self.cost}")
 
 class ConnectionPath:
     def __init__(self,first_city:City=None):
@@ -478,14 +511,14 @@ class GameMap:
 
     def first_automa_city(self,direction:str):
         city = self.automa_start_cities[direction.lower()]
-        self.city_lookup[city].build_house('automa')
+        self.city_lookup[city].build_house('automa',1)
         return self.city_lookup[city]
 
     def next_automa_city(self,direction:str,build_target:City,step:int):
         connection_paths = self.walk_connections(direction,self.max_connections,step,ConnectionPath(build_target))
         if len(connection_paths) == 0:
             return None
-        connection_paths[0].tip().build_house('automa')
+        connection_paths[0].tip().build_house('automa',step)
         return connection_paths[0].tip()
 
     def first_human_city(self):
@@ -581,6 +614,9 @@ class Automa:
         self.houses = 0
         self.build_target = None
 
+    def tiebreaker(self):
+        return self.plants[0].cost
+
     def draw_card(self):
         if len(self.deck) <= 0:
             self.deck = self.discard
@@ -624,9 +660,9 @@ class Automa:
         self.build_index = 3
 
     def debug(self):
-        print('automa')
-        print('plants')
-        print([xx.cost for xx in self.plants])
+        debug_game('automa')
+        debug_game('plants')
+        debug_game([xx.cost for xx in self.plants])
 
     def get_player_order(self,human_plant):
         human_order = 1
@@ -649,27 +685,27 @@ class Automa:
 
     def build_houses(self,game_map,step):
         direction = self.phase_cards[2].build_direction.lower()
-        if DEBUG_PHASE_4:
-            print(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
+        debug_game(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
         last_city = None
         houses_to_place = self.phase_cards[2].city_build[self.build_index]
+        built = 0
         for ii in range(0,houses_to_place):
-            if DEBUG_PHASE_4:
-                print(f'Automa placing house {ii+1} of {houses_to_place}')
+            debug_game(f'Automa placing house {ii+1} of {houses_to_place}')
             if self.houses == 0:
                 self.build_target = game_map.first_automa_city(direction)
-                if DEBUG_PHASE_4:
-                    print(f'Automa first city is {self.build_target.name}')
+                debug_game(f'Automa first city is {self.build_target.name}')
                 self.houses += 1
+                built += 1
             else:
                 last_city = game_map.next_automa_city(direction,self.build_target,step)
                 if last_city:
-                    if DEBUG_PHASE_4:
-                        print(f'Automa built in {last_city.name}')
+                    debug_game(f'Automa built in {last_city.name}')
                 self.houses += 1
+                built += 1
         if last_city:
             self.build_target = last_city
         self.build_index -= 1
+        return built
 
 class Human:
     def __init__(self):
@@ -684,18 +720,26 @@ class Human:
         self.houses = 0
         self.cities = []
 
+    def debug(self):
+        debug_game('Human')
+        debug_game(f'plants -> {[xx.cost for xx in self.plants]}')
+        debug_game(f'resources -> {self.resources}')
+        debug_game(f'money {self.money}')
+
     def purchase_plant(self,plant_market,new_plant,ante,can_ignore=True):
         if not can_ignore:
-            self.money -= new_plant.cost
+            self.money -= new_plant.cost + ante
             self.plants.append(new_plant)
             return True
         if self.money < new_plant.cost + ante:
             return False
         if ante > 3:
             return False
+        if self.power_capacity() >= 15:
+            return False
         for plant in self.plants:
             if plant.power_output < new_plant.power_output or len(self.plants) < 3:
-                self.money -= new_plant.cost
+                self.money -= new_plant.cost + ante
                 self.plants.append(new_plant)
                 self.plants = sorted(self.plants,key=lambda xx:xx.cost)
                 if len(self.plants) > 3:
@@ -703,78 +747,76 @@ class Human:
                 return True
         return False
 
-    def debug(self):
-        print('Human')
-        print('plants')
-        print([xx.cost for xx in self.plants])
-        print('resources')
-        import pprint
-        pprint.pprint(self.resources)
-        print('money')
-        print(self.money)
-
     def get_highest_plant(self):
         return self.plants[-1]
 
     def purchase_resources(self,resource_market):
-        claimed = {
-            'coal': 0,
-            'oil': 0,
-            'trash': 0,
-            'nuke': 0
-        }
+        balance = deepcopy(self.resources)
         houses_served = 0
         orders = []
         self.plants.reverse()
+        resource_order = []
         for plant in self.plants:
             if plant.resource_kind == 'wind':
                 houses_served += plant.power_output
                 continue
-            if houses_served >= self.houses:
+            if houses_served >= self.houses and self.houses > 0:
                 break
             # TODO Handle oil/coal properly
             resource_to_claim = plant.resource_kind
             if plant.resource_kind == 'oil/coal':
                 resource_to_claim = random.choice(['oil','coal'])
-            if self.resources[resource_to_claim] - claimed[resource_to_claim] < plant.resource_amount :
-                amount_to_buy = plant.resource_amount - (self.resources[resource_to_claim] - claimed[resource_to_claim])
-                cost_to_buy,quantity_bought = resource_market.cost_to_buy(resource_to_claim,amount_to_buy)
-                if quantity_bought >= amount_to_buy:
-                    orders.append({'plant': plant,'kind':resource_to_claim,'amount':amount_to_buy,'cost': cost_to_buy})
-                    houses_served += plant.power_output
-                    claimed[resource_to_claim] += plant.resource_amount
+            balance[resource_to_claim] -= plant.resource_amount
+            houses_served += plant.power_output
+            if not resource_to_claim in resource_order and balance[resource_to_claim] < 0:
+                resource_order.append(resource_to_claim)
         self.plants.reverse()
-        for order in orders:
-            if self.money >= order['cost']:
-                purchased,self.money,taken = resource_market.purchase(order['kind'],order['amount'],self.money)
-                self.resources[order['kind']] += taken
+        filled_orders = []
+        for order in resource_order:
+            if balance[order] < 0:
+                debug_game(f"Wallet has ${self.money}. Requesting {-balance[order]} {order}")
+                cost,amount = resource_market.cost_to_buy(order,-balance[order])
+                if cost <= self.money:
+                    purchased,post_money,taken = resource_market.purchase(order,-balance[order],self.money)
+                    self.money = post_money
+                    debug_game(f"Human bought {taken} {order}")
+                    self.resources[order] += taken
+                    filled_orders.append([order,taken,f'${cost}'])
+                else:
+                    debug_game(f"Human didn't have enough money for {-balance[order]} {order}")
+        return filled_orders
 
     def build_houses(self,game_map,step):
         if self.houses == 0:
             destination,money = game_map.first_human_city()
-            destination.build_house('player1')
+            destination.build_house('player1',1)
             self.cities.append(destination)
             self.houses += 1
+            return 1,10
         else:
             can_afford = True
-            built = False
-            while can_afford:
+            built = 0
+            total_cost = 0
+            while can_afford and self.houses < 15:
                 destination = random.choice(self.cities)
                 direction = random_direction()
                 target,cost = game_map.next_human_city(direction,destination,step)
                 if cost < self.money:
-                    if DEBUG_PHASE_4:
-                        print(f'Human building in {target.name} for ${cost}')
-                    target.build_house('player1')
+                    debug_game(f'Human building in {target.name} for ${cost}')
+                    city_cost = target.build_house('player1',step)
                     self.cities.append(target)
                     self.houses += 1
-                    self.money -= cost
-                    built = True
+                    self.money -= cost + city_cost
+                    total_cost += cost + city_cost
+                    built += 1
                 else:
                     can_afford = False
-            if not built:
-                if DEBUG_PHASE_4:
-                    print(f'Human cannot afford to build this turn')
+            if built == 0:
+                if self.houses >= 15:
+                    debug_game(f'Human does not need to build any more houses')
+                else:
+                    debug_game(f'Human cannot afford to build this turn')
+            return built,total_cost
 
     def power_cities(self):
         max_powered = self.houses
@@ -790,14 +832,16 @@ class Human:
                 resource_kind = plant.resource_kind
                 if plant.resource_kind == 'oil/coal':
                     resource_kind = 'oil' if self.resources['oil'] > self.resources['coal'] else 'coal'
-                if self.resources[resource_kind] > plant.resource_amount:
+                if self.resources[resource_kind] >= plant.resource_amount:
                     self.resources[resource_kind] -= plant.resource_amount
                     powered += plant.power_output
         if powered > max_powered:
             powered = max_powered
-        print(f'Human powered {powered} cities and made {power_payouts[powered]} money')
+        debug_game(f'Human powered {powered} cities and made {power_payouts[powered]} money')
         self.money += power_payouts[powered]
 
+    def power_capacity(self):
+        return sum(x.power_output for x in self.plants)
 
 
 def fresh_automa(automa_definitions):
