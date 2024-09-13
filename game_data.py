@@ -615,6 +615,7 @@ class Automa:
         self.build_target = None
 
     def tiebreaker(self):
+        # TODO Variant - Average of plants, not highest
         return self.plants[0].cost
 
     def draw_card(self):

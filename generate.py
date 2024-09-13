@@ -3,6 +3,8 @@ import itertools
 import random
 import simulate
 
+GAMES_TO_SIMULATE = 1000
+
 builds = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]
 market_slots = [1,2,3,4]
 compass = [1,2,3,4,5,6,7,8]
@@ -41,9 +43,9 @@ manual_markets = [
 manual_builds = [
     [1,0,1,1],
     [1,2,1,2],
+    [1,0,2,1],
+    [1,2,1,1],
     [1,1,2,1],
-    [1,2,1,2],
-    [2,1,2,1],
     [1,2,2,1],
     [1,1,2,1],
     [2,1,1,2],
@@ -51,16 +53,16 @@ manual_builds = [
     [1,2,1,1],
     [2,1,1,1],
     [2,2,1,1],
-    [2,1,2,1],
-    [2,1,2,1],
+    [1,1,2,0],
+    [2,1,1,1],
     [1,2,1,2],
     [2,1,1,2],
     [1,2,2,1],
     [2,2,1,1],
     [1,1,2,2],
-    [1,2,1,2],
-    [2,1,2,1],
-    [1,2,1,1],
+    [1,1,1,2],
+    [2,1,1,1],
+    [1,1,1,1],
     [1,1,2,2],
     [1,1,0,2]
 ]
@@ -270,4 +272,4 @@ print('\n\n')
 print(f"The longest the automa will take is {low_turn} turns")
 print(f"The shortest the automa will take is {high_turn} turns")
 
-simulate.play_games(cards,1000)
+simulate.play_games(cards,GAMES_TO_SIMULATE)

@@ -9,14 +9,63 @@ def debug_sim(message):
 def play_games(cards,amount):
     print(f"Simulating {amount} games of Power Grid")
     tallies = [0,0]
+    results = []
     for ii in range(0,amount):
         result = play_game(cards)
-        if result:
+        results.append(result)
+        if result.human_win:
             tallies[0]+=1
         else:
             tallies[1]+=1
     percent = 100.0*(tallies[1]/(tallies[1]+tallies[0]))
     print(f"The automa won {percent}% [{tallies[1]}] games and the human won [{tallies[0]}] games")
+    average_turns = sum([x.turns_taken for x in results])/len(results)
+    print(f'On average, the game was over after [{average_turns}] turns')
+    print(f'Win stats automa-city[{sum([x.automa_city_win for x in results])/len(results)}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
+    print(f'Tiebreaker stats automa[{sum([x.automa_tiebreaker_win for x in results])/len(results)}] human[{sum([x.human_tiebreaker_win for x in results])/len(results)}]')
+
+class GameResult:
+    def __init__(self):
+        self.automa_score = 0
+        self.automa_tiebreaker = 0
+        self.human_cities = 0
+        self.human_money = 0
+        self.human_plants = []
+        self.human_power_capacity = 0
+        self.human_score = 0
+        self.human_win = False
+        self.turns_taken = 0
+        self.automa_city_win = False
+        self.human_city_win = False
+        self.automa_tiebreaker_win = False
+        self.human_tiebreaker_win = False
+
+    def calculate_winner(self):
+        # TODO Actually calculate how many plants will fire, not just capacity
+        if self.human_score > self.human_power_capacity:
+            human_score = self.human_power_capacity
+        if self.automa_score > self.human_score:
+            debug_sim("Automa wins")
+            self.automa_city_win = True
+            return False
+        if self.automa_score < self.human_score:
+            debug_sim("Human wins")
+            self.human_city_win = True
+            return True
+        if self.automa_score == self.human_score:
+            if self.human_power_capacity < self.human_score:
+                debug_sim("Automa wins")
+                self.tiebreaker_automa_win = True
+                return False
+            else:
+                if self.human_money <= self.automa_tiebreaker:
+                    debug_sim(f"Automa wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker()}")
+                    self.tiebreaker_automa_win = True
+                    return False
+                else:
+                    debug_sim(f"Human wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker}")
+                    self.human_tiebreaker_win = True
+                    return True
 
 def play_game(cards):
     game_map = game_data.fresh_map()
@@ -132,26 +181,19 @@ def play_game(cards):
     human.debug()
     debug_sim(f"Automa score {automa_score}")
     debug_sim(f"Human score {human_score} cities and power {human.power_capacity()}")
-    # TODO Actually calculate how many plants will fire, not just capacity
-    if human_score > human.power_capacity():
-        human_score = human.power_capacity()
-    if automa_score > human_score:
-        debug_sim("Automa wins")
-        return False
-    if automa_score < human_score:
-        debug_sim("Human wins")
-        return True
-    if automa_score == human_score:
-        if human.power_capacity() < human_score:
-            debug_sim("Automa wins")
-            return False
-        else:
-            if human.money <= automa.tiebreaker():
-                debug_sim(f"Automa wins with tiebreaker. Human money ${human.money} to {automa.tiebreaker()}")
-                return False
-            else:
-                debug_sim(f"Human wins with tiebreaker. Human money ${human.money} to {automa.tiebreaker()}")
-                return True
+    result = GameResult()
+    result.human_score = human_score
+    result.automa_score = automa_score
+    result.turns_taken = turn_count
+    result.human_money = human.money
+    result.human_power_capacity = human.power_capacity()
+    result.automa_tiebreaker = automa.tiebreaker()
+    result.human_plants = [x.cost for x in human.plants]
+    result.automa_plants = [x.cost for x in automa.plants]
+    result.human_win = result.calculate_winner()
     debug_sim(f"The game took {turn_count} turns")
+    return result
+
+
 
 
