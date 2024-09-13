@@ -3,12 +3,12 @@ import itertools
 import random
 import simulate
 
-GAMES_TO_SIMULATE = 1000
+GAMES_TO_SIMULATE = 1
 
 builds = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]
 market_slots = [1,2,3,4]
 compass = [1,2,3,4,5,6,7,8]
-ante = [2,2,2,2,2,2,2,2,2,3,3,3,3,4,4,4,5,5,5,6,6,6,7,7]
+ante = [3,3,3,7,7,7,7,10,10,10,10,10,10,10,14,14,14,14,14,14,18,18,18,20]
 resource = [2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4]
 mults = [1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2]
 builders = [1,2,3,4]
@@ -41,31 +41,33 @@ manual_markets = [
     [3,2,1,1],
 ]
 manual_builds = [
-    [1,0,1,1],
-    [1,2,1,2],
-    [1,0,2,1],
-    [1,2,1,1],
-    [1,1,2,1],
-    [1,2,2,1],
-    [1,1,2,1],
-    [2,1,1,2],
-    [1,1,2,1],
-    [1,2,1,1],
+    [1,0,3,1],
+    [1,1,0,2],
+    [1,1,1,3],
+    [1,2,1,3],
+    [1,1,2,3],
+    [1,1,3,1],
+    [1,1,3,2],
+    [1,2,3,0],
+    [1,2,3,1],
+    [1,2,3,1],
+    [1,3,1,1],
+    [1,3,1,2],
+    [1,3,1,2],
+    [1,3,1,2],
+    [1,3,2,1],
     [2,1,1,1],
-    [2,2,1,1],
-    [1,1,2,0],
-    [2,1,1,1],
-    [1,2,1,2],
-    [2,1,1,2],
-    [1,2,2,1],
-    [2,2,1,1],
-    [1,1,2,2],
-    [1,1,1,2],
-    [2,1,1,1],
-    [1,1,1,1],
-    [1,1,2,2],
-    [1,1,0,2]
+    [2,1,2,1],
+    [2,1,3,1],
+    [2,1,3,1],
+    [2,3,1,1],
+    [2,3,1,1],
+    [2,4,0,1],
+    [3,1,1,3],
+    [4,1,1,1]
 ]
+house_total = sum([sum(x) for x in manual_builds])
+print(f'The automa can build [{house_total/3}] houses with the deck')
 manual_resources = [
     [0,1,0,1],
     [1,0,1,0],
@@ -135,9 +137,14 @@ for ii in range(0,deck_count):
 
     passer = None if not -1 in market else market.index(-1) + 1
     base_ante = ante[ii % len(ante)]
+    ante_delta = 1
+    if base_ante > 5:
+        ante_delta = 3
+    if base_ante == 20:
+        ante_delta = 4
     antes = []
     for jj in range(0,len(market)):
-        next_ante = base_ante - jj
+        next_ante = base_ante - (ante_delta * jj)
         if next_ante < 0:
             next_ante = 0
         antes.append(next_ante)
@@ -229,7 +236,7 @@ def calc_build(amounts):
 manual_build_totals = [calc_build(x) for x in manual_builds]
 manual_build_totals.sort()
 while low_city < city_max:
-    if low_index > 19:
+    if low_index > 8:
         low_index = 0
     low_city += manual_build_totals[low_index]
     low_index += 1
@@ -240,7 +247,7 @@ high_city = 0
 high_turn = 0
 high_index = 23
 while high_city < city_max:
-    if high_index < 4:
+    if high_index < 15:
         high_index = 23
     high_city += manual_build_totals[high_index]
     high_index -= 1
