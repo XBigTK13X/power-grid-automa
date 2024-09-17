@@ -41,33 +41,46 @@ manual_markets = [
     [3,2,1,1],
 ]
 manual_builds = [
-    [1,0,3,1],
-    [1,1,0,2],
-    [1,1,1,3],
-    [1,2,1,3],
-    [1,1,2,3],
-    [1,1,3,1],
-    [1,1,3,2],
-    [1,2,3,0],
-    [1,2,3,1],
-    [1,2,3,1],
+    [1,0,4,1],
+    [1,1,0,4],
+    [1,1,1,4],
+    [1,2,1,4],
+    [1,1,2,4],
+    [1,1,4,1],
+    [1,1,4,2],
+    [1,2,4,0],
+    [1,3,3,1],
+    [1,4,3,1],
     [1,3,1,1],
-    [1,3,1,2],
-    [1,3,1,2],
-    [1,3,1,2],
-    [1,3,2,1],
+    [1,3,1,4],
+    [1,4,1,2],
+    [1,3,1,3],
+    [1,4,2,1],
     [2,1,1,1],
-    [2,1,2,1],
     [2,1,3,1],
     [2,1,3,1],
+    [4,1,3,1],
     [2,3,1,1],
     [2,3,1,1],
     [2,4,0,1],
-    [3,1,1,3],
-    [4,1,1,1]
+    [3,1,1,4],
+    [3,1,1,1]
 ]
-house_total = sum([sum(x) for x in manual_builds])
-print(f'The automa can build [{house_total/3}] houses with the deck')
+print("==Automa deck stats==")
+manual_build_card_totals = [sum(x) for x in manual_builds]
+print("card build totals")
+print(manual_build_card_totals)
+print("Low build total")
+manual_build_card_totals.sort()
+print(sum(manual_build_card_totals[0:8]))
+print("High build total")
+manual_build_card_totals.reverse()
+print(sum(manual_build_card_totals[0:8]))
+print("Score amounts")
+scores = []
+for xx in manual_builds:
+    scores.append(len([yy for yy in xx if yy > 1]))
+print(scores)
 manual_resources = [
     [0,1,0,1],
     [1,0,1,0],
@@ -258,7 +271,6 @@ for market in manual_markets:
     for hit in market:
         hits[hit] += 1
 
-print("==Automa deck stats==")
 print("Market distribution")
 print(hits)
 

@@ -1,6 +1,6 @@
 import game_data
 
-DEBUG_SIM=False
+DEBUG_SIM=True
 
 def debug_sim(message):
     if DEBUG_SIM:
@@ -76,7 +76,6 @@ def play_game(cards):
     human_score = 0
     automa_score = 0
     human_player_order = 3
-    active_player = 1
     end_game_score = 15
     turn_count = 0
     first_turn = True
@@ -84,6 +83,9 @@ def play_game(cards):
     while automa_score < end_game_score and human_score < end_game_score:
         debug_sim(f"\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
         automa.draw_cards()
+        if first_turn:
+            while not automa.has_four_auction_plants():
+                automa.draw_cards()
         # Phase 1 - Player Order
         if not first_turn:
             if automa_score > human_score:
@@ -123,6 +125,10 @@ def play_game(cards):
                     human_purchased = True
                 if plant_market.refill():
                     step = 3
+        debug_sim("Automa plants")
+        debug_sim([f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in automa.plants])
+        debug_sim("Human plants")
+        debug_sim([f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in human.plants])
 
         if first_turn:
             human_player_order = automa.get_player_order(human.get_highest_plant())
