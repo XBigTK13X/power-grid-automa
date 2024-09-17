@@ -11,6 +11,8 @@ def play_games(cards,amount):
     tallies = [0,0]
     results = []
     for ii in range(0,amount):
+        if(ii % 100 == 0):
+            print(f"Simulating game {ii+1}/{amount}")
         result = play_game(cards)
         results.append(result)
         if result.human_win:
@@ -18,9 +20,11 @@ def play_games(cards,amount):
         else:
             tallies[1]+=1
     percent = 100.0*(tallies[1]/(tallies[1]+tallies[0]))
-    print(f"The automa won {percent}% [{tallies[1]}] games and the human won [{tallies[0]}] games")
+    print(f"The automa won {percent:02}% [{tallies[1]}] games and the human won {100-percent:02}% [{tallies[0]}] games")
     average_turns = sum([x.turns_taken for x in results])/len(results)
-    print(f'On average, the game was over after [{average_turns}] turns')
+    min_turns = min([x.turns_taken for x in results])
+    max_turns = max([x.turns_taken for x in results])
+    print(f'On average, the game was over after [{average_turns}] turns. Shortest was {min_turns} turns. Longest was {max_turns} turns')
     print(f'Win stats automa-city[{sum([x.automa_city_win for x in results])/len(results)}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
     print(f'Tiebreaker stats automa[{sum([x.automa_tiebreaker_win for x in results])/len(results)}] human[{sum([x.human_tiebreaker_win for x in results])/len(results)}]')
 
@@ -125,10 +129,6 @@ def play_game(cards):
                     human_purchased = True
                 if plant_market.refill():
                     step = 3
-        debug_sim("Automa plants")
-        debug_sim([f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in automa.plants])
-        debug_sim("Human plants")
-        debug_sim([f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in human.plants])
 
         if first_turn:
             human_player_order = automa.get_player_order(human.get_highest_plant())
@@ -182,9 +182,8 @@ def play_game(cards):
         debug_sim(f"Finished turn {turn_count} on step {step}")
         debug_sim(f"automa score {automa_score}")
         debug_sim(f"human score {human_score}")
+        automa.debug()
         human.debug()
-    automa.debug()
-    human.debug()
     debug_sim(f"Automa score {automa_score}")
     debug_sim(f"Human score {human_score} cities and power {human.power_capacity()}")
     result = GameResult()

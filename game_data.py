@@ -487,7 +487,7 @@ class GameMap:
                 import sys
                 sys.exit(1)
 
-    def walk_connections(self,direction,max_distance,step,connection_path):
+    def walk_connections(self,direction,max_distance,step,connection_path,ignore_cities=None):
         if connection_path.length() >= max_distance or connection_path.tip().has_open_site(step):
             return [connection_path]
         results = []
@@ -497,9 +497,12 @@ class GameMap:
             direction = direction_lookup[direction].next
             city = connection_path.tip()
             connection = city.get_connection(direction)
-            if connection != None and not connection_path.walked(self.city_lookup[connection.destination]):
-                connection_path.add(self.city_lookup[connection.destination],connection.cost)
-                results += self.walk_connections(direction,max_distance,step,deepcopy(connection_path))
+
+            if connection != None:
+                destination = self.city_lookup[connection.destination]
+                if not connection_path.walked(destination) and (ignore_cities == None or not connection.destination in ignore_cities) :
+                    connection_path.add(destination,connection.cost)
+                    results += self.walk_connections(direction,max_distance,step,deepcopy(connection_path))
             dir_check -= 1
         return sorted(results,key=lambda xx: xx.cost)
 
@@ -508,8 +511,8 @@ class GameMap:
         self.city_lookup[city].build_house('automa',1)
         return self.city_lookup[city]
 
-    def next_automa_city(self,direction:str,build_target:City,step:int):
-        connection_paths = self.walk_connections(direction,self.max_connections,step,ConnectionPath(build_target))
+    def next_automa_city(self,direction:str,build_target:City,step:int,ignore_cities:list):
+        connection_paths = self.walk_connections(direction,self.max_connections,step,ConnectionPath(build_target),ignore_cities)
         if len(connection_paths) == 0:
             return None
         connection_paths[0].tip().build_house('automa',step)
@@ -608,6 +611,11 @@ class Automa:
         self.houses = 0
         self.build_target = None
 
+    def debug(self):
+        debug_game('=-Automa Debug-=')
+        debug_game("  plants")
+        debug_game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in self.plants]}")
+
     def tiebreaker(self):
         # TODO Variant - Average of plants, not highest
         return self.plants[0].cost
@@ -661,11 +669,6 @@ class Automa:
         self.resource_purchase_index = 3
         self.build_index = 3
 
-    def debug(self):
-        debug_game('automa')
-        debug_game('plants')
-        debug_game([xx.cost for xx in self.plants])
-
     def get_player_order(self,human_plant):
         human_order = 1
         for plant in self.plants:
@@ -688,9 +691,10 @@ class Automa:
     def build_houses(self,game_map,step):
         direction = self.phase_cards[2].build_direction.lower()
         debug_game(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
-        last_city = None
         houses_to_place = self.phase_cards[2].city_build[self.build_index]
         built = 0
+        true_last_city = None
+        built_this_turn = []
         for ii in range(0,houses_to_place):
             debug_game(f'Automa placing house {ii+1} of {houses_to_place}')
             if self.houses == 0:
@@ -699,13 +703,15 @@ class Automa:
                 self.houses += 1
                 built += 1
             else:
-                last_city = game_map.next_automa_city(direction,self.build_target,step)
+                last_city = game_map.next_automa_city(direction,self.build_target,step,built_this_turn)
                 if last_city:
+                    built_this_turn.append(last_city.name)
+                    true_last_city = last_city
                     debug_game(f'Automa built in {last_city.name}')
                 self.houses += 1
                 built += 1
-        if last_city:
-            self.build_target = last_city
+        if true_last_city:
+            self.build_target = true_last_city
         self.build_index -= 1
         return built
 
@@ -729,10 +735,11 @@ class Human:
         self.cities = []
 
     def debug(self):
-        debug_game('Human')
-        debug_game(f'plants -> {[xx.cost for xx in self.plants]}')
-        debug_game(f'resources -> {self.resources}')
-        debug_game(f'money {self.money}')
+        debug_game('=-Human-=')
+        debug_game(f'  resources -> {self.resources}')
+        debug_game(f'  money {self.money}')
+        debug_game("  plants")
+        debug_game([f'  #{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in self.plants])
 
     def purchase_plant(self,plant_market,new_plant,ante,can_ignore=True):
         if not can_ignore:
@@ -741,7 +748,7 @@ class Human:
             return True
         if self.money < new_plant.cost + ante:
             return False
-        if ante > 3:
+        if self.power_capacity() > self.houses:
             return False
         if self.power_capacity() >= 15:
             return False

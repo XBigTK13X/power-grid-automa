@@ -2,8 +2,11 @@ import csv
 import itertools
 import random
 import simulate
+import game_data
 
-GAMES_TO_SIMULATE = 1
+GAMES_TO_SIMULATE = 10000
+simulate.DEBUG_SIM = False
+game_data.DEBUG_GAME = False
 
 builds = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]
 market_slots = [1,2,3,4]
@@ -41,19 +44,20 @@ manual_markets = [
     [3,2,1,1],
 ]
 manual_builds = [
-    [1,0,4,1],
+    [2,0,4,1],
     [1,1,0,4],
+    [1,2,4,0],
+    [2,4,0,1],
     [1,1,1,4],
     [1,2,1,4],
     [1,1,2,4],
     [1,1,4,1],
     [1,1,4,2],
-    [1,2,4,0],
     [1,3,3,1],
     [1,4,3,1],
     [1,3,1,1],
     [1,3,1,4],
-    [1,4,1,2],
+    [1,4,3,2],
     [1,3,1,3],
     [1,4,2,1],
     [2,1,1,1],
@@ -61,8 +65,7 @@ manual_builds = [
     [2,1,3,1],
     [4,1,3,1],
     [2,3,1,1],
-    [2,3,1,1],
-    [2,4,0,1],
+    [2,3,3,1],
     [3,1,1,4],
     [3,1,1,1]
 ]
@@ -287,7 +290,6 @@ for builds in manual_builds:
         hits[hit] += 1
 print("build distribution")
 print(hits)
-print('\n\n')
 print(f"The longest the automa will take is {low_turn} turns")
 print(f"The shortest the automa will take is {high_turn} turns")
 
