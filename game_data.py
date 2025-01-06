@@ -7,157 +7,7 @@ def debug_game(message):
     if DEBUG_GAME:
         print(message)
 
-us_map = {
-    'refill':[
-        [5,4,3,2],
-        [7,5,3,3],
-        [5,6,5,2]
-    ],
-    'start_resources':[1,3,7,14],
-    'cities': [
-        [1,'seattle',3],
-        [1,'portland',3],
-        [1,'boise',6],
-        [1,'billings',5],
-        [1,'cheyenne',5],
-        [1,'denver',4],
-        [1,'omaha',4],
-        [2,'san francisco',5],
-        [2,'los angeles',3],
-        [2,'san diego',3],
-        [2,'phoenix',3],
-        [2,'las vegas',6],
-        [2,'salt lake city',5],
-        [2,'santa fe',8],
-        [3,'fargo',3],
-        [3,'duluth',4],
-        [3,'minneapolis',6],
-        [3,'chicago',7],
-        [3,'st. louis',5],
-        [3,'knoxville',2],
-        [3,'cincinnati',6],
-        [4,'kansas city',7],
-        [4,'oklahoma city',4],
-        [4,'dallas',5],
-        [4,'houston',3],
-        [4,'new orleans',5],
-        [4,'memphis',6],
-        [4,'birmingham',4],
-        [5,'miami',1],
-        [5,'tampa',2],
-        [5,'jacksonville',4],
-        [5,'savannah',3],
-        [5,'atlanta',5],
-        [5,'raleigh',5],
-        [5,'norfolk',2],
-        [6,'detroit',5],
-        [6,'pittsburgh',5],
-        [6,'washington dc',3],
-        [6,'philadelphia',2],
-        [6,'buffalo',3],
-        [6,'new york',3],
-        [6,'boston',1]
-    ],
-    'connections': [
-        ['seattle','e','billings',9],
-        ['seattle','se','boise',12],
-        ['seattle','sw','portland',3],
-        ['portland','e','boise',13],
-        ['portland','s','san francisco',24],
-        ['san francisco','ne','boise',23],
-        ['san francisco','e','salt lake city',27],
-        ['san francisco','se','las vegas',14],
-        ['san francisco','s','los angeles',9],
-        ['boise','ne','billings',12],
-        ['boise','e','cheyenne',24],
-        ['boise','se','salt lake city',8],
-        ['las vegas','ne','salt lake city',18],
-        ['las vegas','sw','los angeles',9],
-        ['las vegas','s','san diego',9],
-        ['las vegas','se','phoenix',15],
-        ['las vegas','e','santa fe',27],
-        ['los angeles','se','san diego',3],
-        ['san diego','e','phoenix',14],
-        ['salt lake city','e','denver',21],
-        ['salt lake city','se','santa fe',28],
-        ['phoenix','ne','santa fe',18],
-        ['billings','ne','fargo',17],
-        ['billings','e','minneapolis',18],
-        ['billings','se','cheyenne',9],
-        ['cheyenne','ne','minneapolis',18],
-        ['cheyenne','e','omaha',14],
-        ['cheyenne','s','denver',0],
-        ['denver','e','kansas city','16'],
-        ['denver','s','santa fe',13],
-        ['santa fe','ne','kansas city',16],
-        ['santa fe','e','oklahoma city',15],
-        ['santa fe','se','dallas',16],
-        ['santa fe','s','houston',21],
-        ['fargo','ne','duluth',6],
-        ['fargo','se','minneapolis',6],
-        ['omaha','ne','minneapolis',8],
-        ['omaha','se','kansas city',5],
-        ['omaha','e','chicago',13],
-        ['kansas city','ne','chicago',8],
-        ['kansas city','e','st. louis',6],
-        ['kansas city','se','memphis',12],
-        ['kansas city','sw','oklahoma city',8],
-        ['oklahoma city','e','memphis',14],
-        ['oklahoma city','s','dallas',3],
-        ['dallas','ne','memphis',12],
-        ['dallas','se','new orleans',12],
-        ['dallas','s','houston',5],
-        ['houston','e','new orleans',8],
-        ['duluth','se','detroit',15],
-        ['duluth','s','chicago',12],
-        ['duluth','sw','minneapolis',5],
-        ['minneapolis','se','chicago',8],
-        ['chicago','ne','detroit',7],
-        ['chicago','se','cincinnati',7],
-        ['chicago','s','st. louis',10],
-        ['st. louis','e','cincinnati',12],
-        ['st. louis','se','atlanta',12],
-        ['st. louis','s','memphis',7],
-        ['memphis','se','birmingham',6],
-        ['memphis','s','new orleans',7],
-        ['new orleans','ne','birmingham',11],
-        ['new orleans','e','jacksonville',16],
-        ['birmingham','ne','atlanta',3],
-        ['birmingham','se','jacksonville',9],
-        ['detroit','e','buffalo',7],
-        ['detroit','se','pittsburgh',6],
-        ['detroit','s','cincinnati',4],
-        ['cincinnati','ne','pittsburgh',7],
-        ['cincinnati','se','raleigh',15],
-        ['cincinnati','s','knoxville',6],
-        ['knoxville','s','atlanta',5],
-        ['atlanta','ne','raleigh',7],
-        ['atlanta','se','savannah',7],
-        ['tampa','ne','jacksonville',4],
-        ['tampa','se','miami',4],
-        ['buffalo','se','new york',8],
-        ['buffalo','s','pittsburgh',7],
-        ['pittsburgh','se','washington dc',6],
-        ['pittsburgh','s','raleigh',7],
-        ['savannah','ne','raleigh',7],
-        ['savannah','s','jacksonville',0],
-        ['washington dc','ne','philadelphia',3],
-        ['washington dc','se','norfolk',5],
-        ['raleigh','ne','norfolk',3],
-        ['philadelphia','ne','new york',0],
-        ['new york','ne','boston',3]
-    ],
-    'automa_start_cities':{
-        'e':'san francisco',
-        'w':'norfolk',
-        'n':'houston',
-        's':'duluth',
-        'ne':'san diego',
-        'sw':'boston',
-        'se': 'seattle',
-        'nw': 'miami'
-    }
-}
+
 plants = [
     [3,2,'oil',1],
     [4,2,'coal',1],
@@ -462,20 +312,55 @@ class ConnectionPath:
         return city.name in self.city_lookup
 
 class GameMap:
-    def __init__(self,definition:dict):
+    def __init__(self,definition:dict,player_count):
+        import pprint
+        pprint.pprint(definition)
         self.definition = definition
+        # Short circuit recursive search for open spaces to build
         self.max_connections = 7
+
+        self.player_info = self.definition['player_count_info'][player_count-2]
+        self.resource_market = ResourceMarket(self.definition['start_resources'],self.player_info[-1])
+        self.regions_used = self.player_info[0]
+        self.plants_removed = self.player_info[1]
+        self.plants_per_player = self.player_info[2]
+        self.step_2_city_count = self.player_info[3]
+        self.end_game_city_count = self.player_info[4]
+
+        cities_to_ingest = []
+        if self.regions_used < 6:
+            regions = []
+            region = random.choice(random.choice(self.definition['region_connections']))
+            debug_game(f"Building region chain starting at region {region}")
+            while len(regions) < self.regions_used:
+                for city in self.definition['cities']:
+                    if city[0] == region:
+                        cities_to_ingest.append(city)
+                regions.append(region)
+                for region_connection in self.definition['region_connections']:
+                    if region_connection[0] == region and not region_connection[1] in regions:
+                        region = region_connection[1]
+                    elif region_connection[1] == region and not region_connection[0] in regions:
+                        region = region_connection[0]
+            debug_game(f'Using regions {regions}')
+        else:
+            cities_to_ingest = self.definition['cities']
+        debug_game(f'There are {len(cities_to_ingest) * 3} spaces to build cities. Only {len(cities_to_ingest)} are usable by the human')
+        debug_game(f'A player needs to build {self.step_2_city_count} for step 2 and {self.end_game_city_count} for the end game')
+
         self.city_lookup = {}
         for city in self.definition['cities']:
             self.city_lookup[city[1]] = City(city[0],city[1],city[2])
         for connection in self.definition['connections']:
+            # This should only happen if the connection is to a region that is excluded by player count
+            if not connection[0] in self.city_lookup or not connection[2] in self.city_lookup:
+                continue
             city = self.city_lookup[connection[0]]
             city.add_connection(Connection(connection[1],connection[2],connection[3]))
             self.city_lookup[connection[0]] = city
             city = self.city_lookup[connection[2]]
             city.add_connection(Connection(direction_lookup[connection[1]].opposite,connection[0],connection[3]))
             self.city_lookup[connection[2]] = city
-        self.resource_market = ResourceMarket(self.definition['start_resources'],self.definition['refill'])
         self.automa_start_cities = definition['automa_start_cities']
         self.validate_cities()
 
@@ -520,7 +405,8 @@ class GameMap:
 
     def first_human_city(self):
         direction = random_direction()
-        connection_paths = self.walk_connections(direction,self.max_connections,1,ConnectionPath(self.city_lookup['kansas city']))
+        random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
+        connection_paths = self.walk_connections(direction,self.max_connections,1,ConnectionPath(random_city))
         return connection_paths[0].tip(),connection_paths[0].cost
 
     def next_human_city(self,direction,human_target,step):
@@ -865,8 +751,8 @@ def fresh_automa(automa_definitions):
 def fresh_market():
     return PlantMarket([Plant(x) for x in plants])
 
-def fresh_map():
-    return GameMap(us_map)
+def fresh_map(map,player_count):
+    return GameMap(map,player_count)
 
 def fresh_human():
     return Human()

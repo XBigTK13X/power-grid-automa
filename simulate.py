@@ -6,14 +6,14 @@ def debug_sim(message):
     if DEBUG_SIM:
         print(message)
 
-def play_games(cards,amount):
+def play_games(cards,amount,map,player_count):
     print(f"Simulating {amount} games of Power Grid")
     tallies = [0,0]
     results = []
     for ii in range(0,amount):
         if(ii % 100 == 0):
             print(f"Simulating game {ii+1}/{amount}")
-        result = play_game(cards)
+        result = play_game(cards,map,player_count)
         results.append(result)
         if result.human_win:
             tallies[0]+=1
@@ -47,7 +47,7 @@ class GameResult:
     def calculate_winner(self):
         # TODO Actually calculate how many plants will fire, not just capacity
         if self.human_score > self.human_power_capacity:
-            human_score = self.human_power_capacity
+            self.human_score = self.human_power_capacity
         if self.automa_score > self.human_score:
             debug_sim("Automa wins")
             self.automa_city_win = True
@@ -71,8 +71,8 @@ class GameResult:
                     self.human_tiebreaker_win = True
                     return True
 
-def play_game(cards):
-    game_map = game_data.fresh_map()
+def play_game(cards,map,player_count):
+    game_map = game_data.fresh_map(map,player_count)
     plant_market = game_data.fresh_market()
     automa = game_data.fresh_automa(cards)
     human = game_data.fresh_human()
@@ -80,11 +80,10 @@ def play_game(cards):
     human_score = 0
     automa_score = 0
     human_player_order = 3
-    end_game_score = 15
     turn_count = 0
     first_turn = True
     step = 1
-    while automa_score < end_game_score and human_score < end_game_score:
+    while automa_score < game_map.end_game_city_count and human_score < game_map.end_game_city_count:
         debug_sim(f"\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
         automa.draw_cards()
         if first_turn:
@@ -165,7 +164,7 @@ def play_game(cards):
         automa_score += automa.get_build_score()
         human_score = human.houses
         if step == 1:
-            if automa_score > 7 or human_score > 7:
+            if automa_score > game_map.step_2_city_count or human_score > game_map.step_2_city_count:
                 step = 2
 
         # Phase 5 - Bureaucracy

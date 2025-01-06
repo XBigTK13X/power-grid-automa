@@ -3,10 +3,13 @@ import itertools
 import random
 import simulate
 import game_data
+import game_map
 
-GAMES_TO_SIMULATE = 10000
+GAMES_TO_SIMULATE = 1
+MAP = game_map.united_states_of_america
+PLAYER_COUNT = 4
 simulate.DEBUG_SIM = False
-game_data.DEBUG_GAME = False
+game_data.DEBUG_GAME = True
 
 builds = [0,0,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2]
 market_slots = [1,2,3,4]
@@ -293,4 +296,4 @@ print(hits)
 print(f"The longest the automa will take is {low_turn} turns")
 print(f"The shortest the automa will take is {high_turn} turns")
 
-simulate.play_games(cards,GAMES_TO_SIMULATE)
+simulate.play_games(cards,GAMES_TO_SIMULATE,MAP,PLAYER_COUNT)
