@@ -1,4 +1,5 @@
 united_states_of_america = {
+    'name': "USA",
     'start_resources': [1,3,7,14],
     'player_count_info': [
         [3,8,4,10,21,[[3,2,1,1],[4,2,2,1],[3,4,3,1]]],

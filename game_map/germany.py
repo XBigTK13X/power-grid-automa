@@ -1,4 +1,5 @@
 germany = {
+    'name': "Germany",
     'start_resources': [1,3,7,14],
     'player_count_info': [
         [3,8,4,10,21,[[3,2,1,1],[4,2,2,1],[3,4,3,1]]],
@@ -6,7 +7,6 @@ germany = {
         [4,4,3, 7,17,[[5,3,2,1],[6,4,3,2],[4,5,4,2]]],
         [5,0,3, 7,15,[[5,4,3,2],[7,5,3,3],[5,6,5,2]]],
         [5,0,3, 6,14,[[7,5,3,2],[9,6,5,3],[6,7,6,3]]],
-        ['regions','removed plants','max plants','step 2 trigger','end game trigger','refill rates']
     ],
     'cities': [
         [1,'flensburg',1],

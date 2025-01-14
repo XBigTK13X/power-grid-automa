@@ -474,17 +474,16 @@ class PlantMarket:
 class AutomaCard:
     def __init__(self,definition):
         self.definition = definition
-        self.plant_auction = [definition['market1'],definition['market2']]
-        self.ante = [definition['ante1'],definition['ante2']]
-        self.resource_purchase = [definition['resource1'],definition['resource2']]
-        self.city_build = [definition['build1'],definition['build2']]
+        self.plant_auction = [definition['market1'],definition['market2'],definition['market3'],definition['market4']]
+        self.ante = [definition['ante1'],definition['ante2'],definition['ante3'],definition['ante4']]
+        self.resource_purchase = [definition['resource1'],definition['resource2'],definition['resource3'],definition['resource4']]
+        self.city_build = [definition['build1'],definition['build2'],definition['build3'],definition['build4']]
         self.build_direction = definition['compass_direction']
         self.score = len([xx for xx in self.city_build if xx > 1])
 
 class Automa:
-    def __init__(self,player_count,cards):
+    def __init__(self,cards):
         self.money = 10000 # Never updates, this just lets it claim plants at any cost
-        self.player_count = player_count
         self.deck = cards
         random.shuffle(self.deck)
         self.discard = []
@@ -493,8 +492,8 @@ class Automa:
         self.resource_index = 0
         self.build_index = 0
         self.plants = []
-        self.resource_purchase_index = player_count - 2
-        self.build_index = player_count - 2
+        self.resource_purchase_index = 3
+        self.build_index = 3
         self.houses = 0
         self.build_target = None
 
@@ -553,8 +552,8 @@ class Automa:
 
     def reset_indices(self):
         self.auction_index = 0
-        self.resource_purchase_index = 1
-        self.build_index = 1
+        self.resource_purchase_index = 3
+        self.build_index = 3
 
     def get_player_order(self,human_plant):
         human_order = 1
@@ -746,8 +745,8 @@ class Human:
         return sum(x.power_output for x in self.plants)
 
 
-def fresh_automa(player_count, automa_definitions):
-    return Automa(player_count, [AutomaCard(x) for x in automa_definitions])
+def fresh_automa(automa_definitions):
+    return Automa([AutomaCard(x) for x in automa_definitions])
 
 def fresh_market():
     return PlantMarket([Plant(x) for x in plants])

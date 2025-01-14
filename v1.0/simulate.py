@@ -74,7 +74,7 @@ class GameResult:
 def play_game(cards,map,player_count):
     game_map = game_data.fresh_map(map,player_count)
     plant_market = game_data.fresh_market()
-    automa = game_data.fresh_automa(player_count,cards)
+    automa = game_data.fresh_automa(cards)
     human = game_data.fresh_human()
 
     human_score = 0
@@ -92,7 +92,7 @@ def play_game(cards,map,player_count):
         # Phase 1 - Player Order
         if not first_turn:
             if automa_score > human_score:
-                human_player_order = player_count
+                human_player_order = 5
             if human_score > automa_score:
                 human_player_order = 1
             if human_score == automa_score:
@@ -100,11 +100,11 @@ def play_game(cards,map,player_count):
 
         # Phase 2 - Plant Auction
         human_purchased = False
-        for ii in range(1,player_count+1):
+        for ii in range(1,6):
             ante = 0
             if plant_market.is_empty():
                 continue
-            if human_player_order != player_count:
+            if human_player_order != 5:
                 ante = automa.get_current_ante()
             if ii == human_player_order:
                 next_plant = plant_market.random()
@@ -136,8 +136,8 @@ def play_game(cards,map,player_count):
         # Phase 3 - Purchase Resources
         debug_sim("Starting resource market")
         game_map.resource_market.debug()
-        for ii in range(1,player_count+1):
-            action_index = player_count + 1 - ii
+        for ii in range(1,6):
+            action_index = 6 - ii
             if human_player_order == action_index:
                 filled_orders = human.purchase_resources(game_map.resource_market)
                 debug_sim(f"Human filled resource orders {filled_orders}")
@@ -151,8 +151,8 @@ def play_game(cards,map,player_count):
         game_map.resource_market.debug()
 
         # Phase 4 - Build Houses
-        for ii in range(1,player_count+1):
-            action_index = player_count + 1 - ii
+        for ii in range(1,6):
+            action_index = 6 - ii
             if human_player_order == action_index:
                 built,cost = human.build_houses(game_map,step)
                 debug_sim(f'Human built {built} houses for ${cost}')
@@ -183,7 +183,6 @@ def play_game(cards,map,player_count):
         debug_sim(f"human score {human_score}")
         automa.debug()
         human.debug()
-
     debug_sim(f"Automa score {automa_score}")
     debug_sim(f"Human score {human_score} cities and power {human.power_capacity()}")
     result = GameResult()
