@@ -23,3 +23,5 @@ That would means at 1p and 2p no cards are removed from the plant deck and all r
 Looking at the numbers, 2p and 3p are not great. 2p has 10/21 for step 2 and end game. 3p has 7 and 17 for end game. I do like that 3p and 4p have the same step 2 and end game triggers. That would be one less thing to balance (the automa's rate of gaining points).
 
 It might make sense to have a 1p and 2p deck, but I like keeping things simple and only needing a single deck.
+
+Maybe the automa has two stacks of plants. It a new purchase is higher, then it goes top the stack. Otherwise it goes bottom the stack.

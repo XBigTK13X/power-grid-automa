@@ -492,7 +492,7 @@ class Automa:
         self.auction_index = 0
         self.resource_index = 0
         self.build_index = 0
-        self.plants = []
+        self.plant_stacks = [[],[]]
         self.resource_purchase_index = player_count - 2
         self.build_index = player_count - 2
         self.houses = 0
@@ -501,11 +501,12 @@ class Automa:
     def debug(self):
         debug_game('=-Automa Debug-=')
         debug_game("  plants")
-        debug_game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in self.plants]}")
+        for stack in self.plant_stacks:
+            debug_game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount}' for x in stack]}")
 
     def tiebreaker(self):
         # TODO Variant - Average of plants, not highest
-        return self.plants[0].cost
+        return self.plant_stacks[0][0].cost
 
     def draw_card(self):
         if len(self.deck) <= 0:
@@ -530,17 +531,18 @@ class Automa:
         ]
 
     def claim_plant(self,plant):
-        self.plants.append(plant)
-        self.plants = sorted(self.plants,key=lambda xx: xx.cost,reverse=True)
-        if len(self.plants) > 4:
-            low_wind_index = -1
-            for ii in range(0,len(self.plants)):
-                if self.plants[ii].resource_kind == 'wind':
-                    low_wind_index = ii
-            if ii != -1:
-                del self.plants[ii]
+        stack_index = 0
+        if len(self.plant_stacks[0]) > len(self.plant_stacks[1]):
+            stack_index = 1
+        if len(self.plant_stacks[stack_index]) < 1:
+            self.plant_stacks[stack_index].append(plant)
+        else:
+            if self.plant_stacks[stack_index][0].cost > plant.cost:
+                self.plant_stacks[stack_index].append(plant)
             else:
-                self.plants = self.plants[0:4]
+                self.plant_stacks[stack_index].insert(0,plant)
+        if len(self.plant_stacks[stack_index]) > 4:
+            self.plant_stacks[stack_index] = self.plant_stacks[stack_index][0:4]
 
     def get_plant_auction_index(self):
         return self.phase_cards[0].plant_auction[self.auction_index]
@@ -558,19 +560,23 @@ class Automa:
 
     def get_player_order(self,human_plant):
         human_order = 1
-        for plant in self.plants:
-            if plant.cost < human_plant.cost:
+        for stack in self.plant_stacks:
+            if stack[0].cost < human_plant.cost:
                 return human_order
             human_order += 1
         return human_order
 
     def get_resource_purchase_mult(self):
+        return 1
         mult = self.phase_cards[1].resource_purchase[self.resource_purchase_index]
         self.resource_purchase_index -= 1
         return int(mult[0])
 
-    def get_resource_purchase_plant(self):
-        return self.plants[self.resource_purchase_index]
+    def get_resource_purchase_plants(self,player_index):
+        if player_index > len(self.plant_stacks) - 1:
+            player_index = len(self.plant_stacks) - 1
+        # TODO All the plants in the stack
+        return self.plant_stacks[player_index]
 
     def get_build_score(self):
         return self.phase_cards[2].score

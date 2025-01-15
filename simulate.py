@@ -142,11 +142,11 @@ def play_game(cards,map,player_count):
                 filled_orders = human.purchase_resources(game_map.resource_market)
                 debug_sim(f"Human filled resource orders {filled_orders}")
             else:
-                active_plant = automa.get_resource_purchase_plant()
-                resource_amount = active_plant.resource_amount*automa.get_resource_purchase_mult()
-                if active_plant.resource_kind != 'wind':
-                    purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,automa.money)
-                    debug_sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
+                for active_plant in automa.get_resource_purchase_plants(action_index):
+                    resource_amount = active_plant.resource_amount*automa.get_resource_purchase_mult()
+                    if active_plant.resource_kind != 'wind':
+                        purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,automa.money)
+                        debug_sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
         debug_sim("Ending resource market")
         game_map.resource_market.debug()
 
@@ -194,7 +194,9 @@ def play_game(cards,map,player_count):
     result.human_power_capacity = human.power_capacity()
     result.automa_tiebreaker = automa.tiebreaker()
     result.human_plants = [x.cost for x in human.plants]
-    result.automa_plants = [x.cost for x in automa.plants]
+    result.automa_plants = []
+    for ii in range(0,len(automa.plant_stacks)):
+     result.automa_plants.append([x.cost for x in automa.plant_stacks[ii]])
     result.human_win = result.calculate_winner()
     debug_sim(f"The game took {turn_count} turns")
     return result
