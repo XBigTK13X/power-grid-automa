@@ -83,6 +83,15 @@ def play_game(cards,map,player_count):
     turn_count = 0
     first_turn = True
     step = 1
+    start_resource_amounts = game_map.resource_market.amounts()
+    resource_purchase_tracker = {
+        'oil':{'human':0,'automa':0,'refill':start_resource_amounts[0]},
+        'coal':{'human':0,'automa':0,'refill':start_resource_amounts[1]},
+        'trash':{'human':0,'automa':0,'refill':start_resource_amounts[2]},
+        'nuke':{'human':0,'automa':0,'refill':start_resource_amounts[3]}
+    }
+    automa_cities_built = 0
+    human_cities_built = 0
     while automa_score < game_map.end_game_city_count and human_score < game_map.end_game_city_count:
         debug_sim(f"\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
         automa.draw_cards()
@@ -140,13 +149,26 @@ def play_game(cards,map,player_count):
             action_index = player_count + 1 - ii
             if human_player_order == action_index:
                 filled_orders = human.purchase_resources(game_map.resource_market)
+                for filled_order in filled_orders:
+                    resource_purchase_tracker[filled_order[0]]['human'] += filled_order[1]
                 debug_sim(f"Human filled resource orders {filled_orders}")
             else:
                 for active_plant in automa.get_resource_purchase_plants(action_index):
                     resource_amount = active_plant.resource_amount*automa.get_resource_purchase_mult()
                     if active_plant.resource_kind != 'wind':
-                        purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,automa.money)
-                        debug_sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
+                        if active_plant.resource_kind == 'oil/coal':
+                            start_amounts = game_map.resource_market.amounts()
+                            purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,automa.money)
+                            debug_sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
+                            end_amounts = game_map.resource_market.amounts()
+                            if end_amounts[0] != start_amounts[0]:
+                                resource_purchase_tracker['coal']['automa'] += start_amounts[0] - end_amounts[0]
+                            if end_amounts[1] != start_amounts[1]:
+                                resource_purchase_tracker['oil']['automa'] += start_amounts[1] - end_amounts[1]
+                        else:
+                            purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,automa.money)
+                            resource_purchase_tracker[active_plant.resource_kind]['automa'] += taken
+                            debug_sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
         debug_sim("Ending resource market")
         game_map.resource_market.debug()
 
@@ -155,9 +177,11 @@ def play_game(cards,map,player_count):
             action_index = player_count + 1 - ii
             if human_player_order == action_index:
                 built,cost = human.build_houses(game_map,step)
+                human_cities_built += built
                 debug_sim(f'Human built {built} houses for ${cost}')
             else:
                 built = automa.build_houses(game_map,step)
+                automa_cities_built += built
                 debug_sim(f'Automa built {built} houses')
 
 
@@ -169,7 +193,9 @@ def play_game(cards,map,player_count):
 
         # Phase 5 - Bureaucracy
         automa.reset_indices()
-        game_map.resource_market.refill_phase(step)
+        refill_amounts = game_map.resource_market.refill_phase(step)
+        for kind,amount in refill_amounts.items():
+            resource_purchase_tracker[kind]['refill'] += amount
         human.power_cities()
         if step == 1 or step == 2:
             if plant_market.cycle_highest():
@@ -186,6 +212,9 @@ def play_game(cards,map,player_count):
 
     debug_sim(f"Automa score {automa_score}")
     debug_sim(f"Human score {human_score} cities and power {human.power_capacity()}")
+    import pprint
+    pprint.pprint(resource_purchase_tracker)
+    print(f'Automa built in {automa_cities_built} cities and human built in {human_cities_built} cities')
     result = GameResult()
     result.human_score = human_score
     result.automa_score = automa_score
