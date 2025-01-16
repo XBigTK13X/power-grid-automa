@@ -1,5 +1,6 @@
-DEBUG_GAME=True
-DEBUG_SIM=True
+DEBUG_GAME=False
+DEBUG_SIM=False
+DEBUG_RESULT=False
 
 def game(message):
     if DEBUG_GAME:
@@ -7,4 +8,8 @@ def game(message):
 
 def sim(message):
     if DEBUG_SIM:
+        print(message)
+
+def result(message):
+    if DEBUG_RESULT:
         print(message)

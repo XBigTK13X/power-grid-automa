@@ -1,6 +1,7 @@
 import src.debug as debug
 debug.DEBUG_SIM = True
 debug.DEBUG_GAME = True
+debug.DEBUG_RESULT = True
 
 import src.generate as generate
 import src.simulate as simulate

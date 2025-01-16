@@ -10,7 +10,7 @@ class AutomaCard:
         self.resource_purchase = [definition['resource1'],definition['resource2']]
         self.city_build = [definition['build1'],definition['build2']]
         self.build_direction = definition['compass_direction']
-        self.score = len([xx for xx in self.city_build if xx > 1])
+        self.score = int(definition['score'])
 
 class Automa:
     def __init__(self,player_count,card_infos):
@@ -29,6 +29,8 @@ class Automa:
         self.build_index = player_count - 2
         self.houses = 0
         self.build_target = None
+        self.cities = []
+        self.city_names = []
 
     def debug(self):
         debug.game('=-Automa Debug-=')
@@ -36,6 +38,7 @@ class Automa:
         for stack in self.plant_stacks:
             debug.game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in stack]}")
         debug.game(f'  points {self.houses}')
+        debug.game(f'  cities {self.city_names}')
 
     def tiebreaker(self):
         # TODO Variant - Average of plants, not highest
@@ -120,19 +123,21 @@ class Automa:
         houses_to_place = self.phase_cards[2].city_build[self.build_index]
         built = 0
         true_last_city = None
-        built_this_turn = []
         for ii in range(0,houses_to_place):
             debug.game(f'Automa placing house {ii+1} of {houses_to_place}')
             if self.houses == 0:
                 self.build_target = game_map.first_automa_city(direction)
                 debug.game(f'Automa first city is {self.build_target.name}')
+                self.cities.append(self.build_target)
+                self.city_names.append(self.build_target.name)
                 self.houses += 1
                 built += 1
             else:
-                last_city = game_map.next_automa_city(direction,self.build_target,step,built_this_turn)
+                last_city = game_map.next_automa_city(direction,self.build_target,step,self.city_names)
                 if last_city:
-                    built_this_turn.append(last_city.name)
                     true_last_city = last_city
+                    self.cities.append(last_city)
+                    self.city_names.append(last_city.name)
                     debug.game(f'Automa built in {last_city.name}')
                 self.houses += 1
                 built += 1
@@ -142,8 +147,6 @@ class Automa:
         return built
 
     def has_four_auction_plants(self):
-        import pprint
-        pprint.pprint(self.phase_cards)
         for plant in self.phase_cards[0].plant_auction:
             if plant == -1:
                 return False

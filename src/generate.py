@@ -1,24 +1,26 @@
+import src.debug as debug
+
 import csv
 import random
 
 import src.automa_card_info as automa_card_info
 
 def create_cards():
-    print("==Automa deck stats==")
+    debug.sim("==Automa deck stats==")
     manual_build_card_totals = [sum(x) for x in automa_card_info.manual_builds]
-    print("card build totals")
-    print(manual_build_card_totals)
-    print("Low build total")
+    debug.sim("card build totals")
+    debug.sim(manual_build_card_totals)
+    debug.sim("Low build total")
     manual_build_card_totals.sort()
-    print(sum(manual_build_card_totals[0:8]))
-    print("High build total")
+    debug.sim(sum(manual_build_card_totals[0:8]))
+    debug.sim("High build total")
     manual_build_card_totals.reverse()
-    print(sum(manual_build_card_totals[0:8]))
-    print("Score amounts")
+    debug.sim(sum(manual_build_card_totals[0:8]))
+    debug.sim("Score amounts")
     scores = []
     for xx in automa_card_info.manual_builds:
         scores.append(len([yy for yy in xx if yy > 1]))
-    print(scores)
+    debug.sim(scores)
 
 
     random.shuffle(automa_card_info.ante)
@@ -74,9 +76,13 @@ def create_cards():
         card['compass_direction'] = compass[1]
         card['compass_display'] = f'{compass[1]}'
         build = automa_card_info.manual_builds[ii % len(automa_card_info.manual_builds)]
-        card['build'] = sum(1 for ii in build if ii > 1)
         card['build1'] = build[0]
         card['build2'] = build[1]
+        card['score'] = 0
+        if card['build1'] >= 1:
+            card['score'] += 1
+        if card['build2'] >= 1:
+            card['score'] += 1
         card['id'] = f'F{ii+1:02}'
         cards.append(card)
     return cards
@@ -96,7 +102,7 @@ def write_cards_to_csv(cards):
         'compass_direction',
         'compass_display',
         'compass_rotation',
-        'build',
+        'score',
         'build1',
         'build2'
     ]

@@ -40,6 +40,7 @@ class Human:
         }
         self.houses = 0
         self.cities = []
+        self.city_names = []
 
     def debug(self):
         debug.game('=-Human-=')
@@ -48,6 +49,8 @@ class Human:
         debug.game("  plants")
         debug.game([f'  #{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in self.plants])
         debug.game(f'  points {self.houses}')
+        debug.game(f'  cities')
+        debug.game(f'  {self.city_names}')
 
     def purchase_plant(self,plant_market,new_plant,ante,can_ignore=True):
         if not can_ignore:
@@ -114,6 +117,7 @@ class Human:
             destination,money = game_map.first_human_city()
             destination.build_house('human',1)
             self.cities.append(destination)
+            self.city_names.append(destination.name)
             self.houses += 1
             return 1,10
         else:
@@ -123,14 +127,18 @@ class Human:
             while can_afford and self.houses < 15:
                 destination = random.choice(self.cities)
                 direction = model.random_direction()
-                target,cost = game_map.next_human_city(direction,destination,step)
-                if cost < self.money:
-                    debug.game(f'Human building in {target.name} for ${cost}')
-                    city_cost = target.build_house('human',step)
+                target,city_with_connection_cost = game_map.next_human_city(self.money,direction,destination,step,self.city_names)
+                if target == None:
+                    debug.game("Could not find an open city")
+                    break
+                if city_with_connection_cost < self.money:
+                    debug.game(f'Human building in {target.name} for ${city_with_connection_cost}')
+                    target.build_house('human',step)
                     self.cities.append(target)
+                    self.city_names.append(target.name)
                     self.houses += 1
-                    self.money -= cost + city_cost
-                    total_cost += cost + city_cost
+                    self.money -= city_with_connection_cost
+                    total_cost += city_with_connection_cost
                     built += 1
                 else:
                     can_afford = False

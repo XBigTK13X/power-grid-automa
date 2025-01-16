@@ -15,13 +15,14 @@ def play_games(cards, amount, map, player_count):
         else:
             tallies[1]+=1
     percent = 100.0*(tallies[1]/(tallies[1]+tallies[0]))
-    print(f"The automa won {percent:02}% [{tallies[1]}] games and the human won {100-percent:02}% [{tallies[0]}] games")
+    debug.result(f"The automa won {percent:02}% [{tallies[1]}] games and the human won {100-percent:02}% [{tallies[0]}] games")
     average_turns = sum([x.turns_taken for x in results])/len(results)
     min_turns = min([x.turns_taken for x in results])
     max_turns = max([x.turns_taken for x in results])
-    print(f'On average, the game was over after [{average_turns}] turns. Shortest was {min_turns} turns. Longest was {max_turns} turns')
-    print(f'Win stats automa-city[{sum([x.automa_city_win for x in results])/len(results)}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
-    print(f'Tiebreaker stats automa[{sum([x.automa_tiebreaker_win for x in results])/len(results)}] human[{sum([x.human_tiebreaker_win for x in results])/len(results)}]')
+    debug.result(f'On average, the game was over after [{average_turns}] turns. Shortest was {min_turns} turns. Longest was {max_turns} turns')
+    debug.result(f'Win stats automa-city[{sum([x.automa_city_win for x in results])/len(results)}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
+    debug.result(f'Tiebreaker stats automa[{sum([x.automa_tiebreaker_win for x in results])/len(results)}] human[{sum([x.human_tiebreaker_win for x in results])/len(results)}]')
+    debug.result(f'Human money at end game averaged [{sum([x.human_money for x in results])/len(results)}] with a min [{min([x.human_money for x in results])}] and max [{max([x.human_money for x in results])}]')
 
 def play_game(cards,map,player_count):
     debug.sim("Setting up a new game")
@@ -48,10 +49,13 @@ def play_game(cards,map,player_count):
     debug.sim("Entering sim loop")
     while automa_score < game_map.end_game_city_count and human_score < game_map.end_game_city_count:
         debug.sim(f"\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
+
         automa.draw_cards()
         if first_turn:
             while not automa.has_four_auction_plants():
                 automa.draw_cards()
+
+        debug.sim("Determining player order")
         # Phase 1 - Player Order
         if not first_turn:
             if automa_score > human_score:
@@ -60,9 +64,11 @@ def play_game(cards,map,player_count):
                 human_player_order = 1
             if human_score == automa_score:
                  human_player_order = automa.get_player_order(human.get_highest_plant())
+        debug.sim(f"Human is player {human_player_order} with ${human.money}")
 
         # Phase 2 - Plant Auction
         human_purchased = False
+        debug.sim("Purchasing plants")
         for ii in range(1,player_count+1):
             ante = 0
             if plant_market.is_empty():
@@ -78,6 +84,7 @@ def play_game(cards,map,player_count):
                     if plant_market.refill():
                         step = 3
                 else:
+                    debug.sim("The human did not purchase a plant")
                     plant_market.replace(next_plant)
             else:
                 if not plant_market.has_plant(automa.get_plant_auction_index()):
@@ -85,9 +92,11 @@ def play_game(cards,map,player_count):
                     continue
                 next_plant = plant_market.take_plant(automa.get_plant_auction_index())
                 if human_purchased or not human.purchase_plant(plant_market,next_plant,ante):
+                    debug.sim(f"Automa purchased plant {next_plant.cost}")
                     automa.claim_plant(next_plant)
                     automa.next_auction_index()
                 else:
+                    debug.sim(f"Human purchased plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
                     human_purchased = True
                 if plant_market.refill():
                     step = 3
@@ -127,6 +136,7 @@ def play_game(cards,map,player_count):
         game_map.resource_market.debug()
 
         # Phase 4 - Build Houses
+        debug.sim("Starting city building")
         for ii in range(1,player_count+1):
             action_index = player_count + 1 - ii
             if human_player_order == action_index:
@@ -166,9 +176,9 @@ def play_game(cards,map,player_count):
 
     debug.sim(f"Automa score {automa_score}")
     debug.sim(f"Human score {human_score} cities and power {human.power_capacity()}")
-    import pprint
-    pprint.pprint(resource_purchase_tracker)
-    print(f'Automa built in {automa_cities_built} cities and human built in {human_cities_built} cities')
+    #import pprint
+    #pprint.pprint(resource_purchase_tracker)
+    debug.sim(f'Automa built in {automa_cities_built} cities and human built in {human_cities_built} cities')
     result = model.GameResult()
     result.human_score = human_score
     result.automa_score = automa_score
