@@ -1,15 +1,14 @@
 import src.debug as debug
-debug.DEBUG_SIM = True
-debug.DEBUG_GAME = True
+debug.DEBUG_SIM = False
+debug.DEBUG_GAME = False
 debug.DEBUG_RESULT = True
+GAMES_TO_SIMULATE = 100
+PLAYER_COUNT = 3
+import src.board
+MAP = src.board.united_states_of_america
 
 import src.generate as generate
 import src.simulate as simulate
-import src.board
-
-GAMES_TO_SIMULATE = 1
-MAP = src.board.united_states_of_america
-PLAYER_COUNT = 3
 
 cards = generate.create_cards()
 generate.write_cards_to_csv(cards)

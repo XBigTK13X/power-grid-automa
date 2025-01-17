@@ -37,7 +37,6 @@ class City:
         if cost == None:
             return cost
         self.sites.append(builder)
-        print(f'Sites for {self.name} - {self.sites}')
         return cost
 
     def has_automa(self):
@@ -172,7 +171,7 @@ class GameMap:
                 if not_in_connection_path and didnt_build_before:
                     connection_path.add(destination,connection.cost)
                     build_cost = connection_path.tip_cost(step,builder)
-                    if wallet == None or (build_cost != None and wallet >= build_cost) :
+                    if build_cost != None and (wallet == None or wallet >= build_cost) :
                         results += self.walk_connections(wallet,builder,direction,max_distance,step,deepcopy(connection_path))
             dir_check -= 1
         return sorted([yy for yy in results if yy != None],key=lambda xx: xx.tip_cost(step,builder))

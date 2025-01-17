@@ -22,7 +22,6 @@ def create_cards():
         scores.append(len([yy for yy in xx if yy > 1]))
     debug.sim(scores)
 
-
     random.shuffle(automa_card_info.ante)
     random.shuffle(automa_card_info.compass)
     random.shuffle(automa_card_info.resource)
@@ -79,10 +78,10 @@ def create_cards():
         card['build1'] = build[0]
         card['build2'] = build[1]
         card['score'] = 0
-        if card['build1'] >= 1:
-            card['score'] += 1
-        if card['build2'] >= 1:
-            card['score'] += 1
+        if card['build1'] >= 1 or card['build2'] >= 1:
+            card['score'] = 1
+        if card['build1'] >= 1 and card['build2'] >= 1:
+            card['score'] = 2
         card['id'] = f'F{ii+1:02}'
         cards.append(card)
     return cards

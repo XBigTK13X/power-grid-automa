@@ -35,7 +35,7 @@ class GameResult:
                 return False
             else:
                 if self.human_money <= self.automa_tiebreaker:
-                    debug.sim(f"Automa wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker()}")
+                    debug.sim(f"Automa wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker}")
                     self.tiebreaker_automa_win = True
                     return False
                 else:
