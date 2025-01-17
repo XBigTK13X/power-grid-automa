@@ -1,5 +1,7 @@
 import src.board as board
 import src.automa_card_info as automa_card_info
+import src.generate as generate
+import src.model as model
 
 def analyze_board(map):
     city_count = len(map['cities'])
@@ -39,54 +41,40 @@ def analyze_board(map):
         'player_count_report': player_details
     })
 
+def count_turns(deck):
+    deck.pop()
+    deck.pop()
+    deck.pop()
+    end_game_score = 17
+    card_index = 0
+    current_score = 0
+    turns = 0
+    build_count = 0
+    while current_score < end_game_score:
+        card = deck[card_index % len(deck)]
+        current_score += card.score
+        card_index += 1
+        turns += 1
+        build_count += card.build_count
+    return turns,build_count
+
 def analyze_automa():
-    # TODO This isn't working since the refactor, finite loops in the low count
-    city_max = 14
-    low_city = 0
-    low_turn = 0
-    low_index = 0
-    def calc_build(amounts):
-        return len([x for x in amounts if x > 1])
+    cards = [model.AutomaCard(xx) for xx in generate.create_cards()]
+    low_score_turns,low_score_build_count = count_turns(sorted(cards,key=lambda xx:xx.score))
+    high_score_turns,high_score_build_count = count_turns(sorted(cards,key=lambda xx:xx.score,reverse=True))
+    low_build_turns,low_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count))
+    high_build_turns,high_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count,reverse=True))
 
-    manual_build_totals = [calc_build(x) for x in automa_card_info.manual_builds]
-    manual_build_totals.sort()
-    low_circuit = 100
-    while low_city < city_max:
-        low_circuit -= 1
-        if low_circuit <= 0:
-            print("Unable to calculate low city")
-            break;
-        if low_index > 8:
-            low_index = 0
-        low_city += manual_build_totals[low_index]
-        low_index += 1
-        low_turn += 1
-        print(manual_build_totals[low_index])
-
-    city_max = 14
-    high_city = 0
-    high_turn = 0
-    high_index = 23
-    high_circuit = 100
-    while high_city < city_max:
-        high_circuit -= 1
-        if high_circuit <= 0:
-            print("Unable to calculate high city")
-            break;
-        if high_index < 15:
-            high_index = 23
-        high_city += manual_build_totals[high_index]
-        high_index -= 1
-        high_turn += 1
-        print('high')
-
-    hits = [0,0,0,0,0]
-    for market in automa_card_info.manual_markets:
+    hits = {}
+    for market in automa_card_info.manual_plant_choices:
         for hit in market:
+            if not hit in hits:
+                hits[hit] = 0
             hits[hit] += 1
 
     print("Market distribution")
-    print(hits)
+    import pprint
+    pprint.pprint(hits,width=2)
 
     hits = [0,0,0,0,0]
     for res in automa_card_info.manual_resources:
@@ -95,15 +83,21 @@ def analyze_automa():
     print("Resource distribution")
     print(hits)
 
-    hits = [0,0,0,0,0]
+    hits = {}
     for manual_build in automa_card_info.manual_builds:
         for hit in manual_build:
+            if not hit in hits:
+                hits[hit] = 0
             hits[hit] += 1
     print("build distribution")
-    print(hits)
-    print(f"The longest the automa will take is {low_turn} turns")
-    print(f"The shortest the automa will take is {high_turn} turns")
+    import pprint
+    pprint.pprint(hits,width=2)
+    print(f"The game ends when someone scores 17 points")
+    print(f"The longest the automa will take is {low_score_turns} turns")
+    print(f"The shortest the automa will take is {high_score_turns} turns")
+    print(f"The automa will place at minimum {low_build_build_count} buildings")
+    print(f"The automa will place at maximum {high_build_build_count} buildings")
 
 analyze_board(board.united_states_of_america)
 analyze_board(board.germany)
-analyze_automa
+analyze_automa()

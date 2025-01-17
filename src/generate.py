@@ -27,9 +27,9 @@ def create_cards():
     random.shuffle(automa_card_info.resource)
     random.shuffle(automa_card_info.builders)
     random.shuffle(automa_card_info.mults)
-    random.shuffle(automa_card_info.passers)
 
-    random.shuffle(automa_card_info.manual_markets)
+    random.shuffle(automa_card_info.manual_scores)
+    random.shuffle(automa_card_info.manual_plant_choices)
     random.shuffle(automa_card_info.manual_builds)
     random.shuffle(automa_card_info.manual_resources)
 
@@ -37,7 +37,7 @@ def create_cards():
     cards = []
     for ii in range(0,deck_count):
         card = {}
-        market = list(automa_card_info.manual_markets[ii % len(automa_card_info.manual_markets)])
+        market = list(automa_card_info.manual_plant_choices[ii % len(automa_card_info.manual_plant_choices)])
         card['market1'] = market[0]
         card['market2'] = market[1]
 
@@ -77,11 +77,7 @@ def create_cards():
         build = automa_card_info.manual_builds[ii % len(automa_card_info.manual_builds)]
         card['build1'] = build[0]
         card['build2'] = build[1]
-        card['score'] = 0
-        if card['build1'] >= 1 or card['build2'] >= 1:
-            card['score'] = 1
-        if card['build1'] >= 1 and card['build2'] >= 1:
-            card['score'] = 2
+        card['score'] = automa_card_info.manual_scores[ii % len(automa_card_info.manual_scores)]
         card['id'] = f'F{ii+1:02}'
         cards.append(card)
     return cards
