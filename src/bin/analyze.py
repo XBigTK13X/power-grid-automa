@@ -53,9 +53,9 @@ def count_turns(deck):
     while current_score < end_game_score:
         card = deck[card_index % len(deck)]
         current_score += card.score
+        build_count += card.build_count
         card_index += 1
         turns += 1
-        build_count += card.build_count
     return turns,build_count
 
 def analyze_automa():
@@ -65,6 +65,7 @@ def analyze_automa():
     low_build_turns,low_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count))
     high_build_turns,high_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count,reverse=True))
 
+    print("Market distribution")
     hits = {}
     for market in automa_card_info.manual_plant_choices:
         for hit in market:
@@ -72,24 +73,16 @@ def analyze_automa():
                 hits[hit] = 0
             hits[hit] += 1
 
-    print("Market distribution")
     import pprint
     pprint.pprint(hits,width=2)
 
-    hits = [0,0,0,0,0]
-    for res in automa_card_info.manual_resources:
-        for hit in res:
-            hits[hit] += 1
-    print("Resource distribution")
-    print(hits)
-
+    print("Build distribution")
     hits = {}
     for manual_build in automa_card_info.manual_builds:
         for hit in manual_build:
             if not hit in hits:
                 hits[hit] = 0
             hits[hit] += 1
-    print("build distribution")
     import pprint
     pprint.pprint(hits,width=2)
     print(f"The game ends when someone scores 17 points")

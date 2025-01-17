@@ -7,11 +7,11 @@ class AutomaCard:
         self.definition = definition
         self.plant_auction = [definition['market1'],definition['market2']]
         self.ante = [definition['ante1'],definition['ante2']]
-        self.resource_purchase = [definition['resource1'],definition['resource2']]
         self.city_build = [definition['build1'],definition['build2']]
         self.build_direction = definition['compass_direction']
         self.score = int(definition['score'])
         self.build_count = sum(self.city_build)
+        # TODO Actually use the resource skip when indicated
 
 class Automa:
     def __init__(self,player_count,card_infos):
