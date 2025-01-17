@@ -48,7 +48,7 @@ def play_game(cards,map,player_count):
     human_cities_built = 0
     debug.sim("Entering sim loop")
     while automa_score < game_map.end_game_city_count and human_score < game_map.end_game_city_count:
-        debug.sim(f"\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
+        debug.sim(f"\n\n\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
 
         automa.draw_cards()
         if first_turn:
@@ -141,12 +141,18 @@ def play_game(cards,map,player_count):
             action_index = player_count + 1 - ii
             if human_player_order == action_index:
                 built,cost = human.build_houses(game_map,step)
-                human_cities_built += built
-                debug.sim(f'Human built {built} houses for ${cost}')
+                if built == None:
+                    debug.sim("Human unable to find a free space!")
+                else:
+                    human_cities_built += built
+                    debug.sim(f'Human built {built} houses for ${cost}')
             else:
                 built = automa.build_houses(game_map,step)
-                automa_cities_built += built
-                debug.sim(f'Automa built {built} houses')
+                if built == None:
+                    debug.sim("Automa unable to find a free space!")
+                else:
+                    automa_cities_built += built
+                    debug.sim(f'Automa built {built} houses')
 
 
         automa_score += automa.get_build_score()
@@ -173,6 +179,7 @@ def play_game(cards,map,player_count):
         debug.sim(f"human score {human_score}")
         automa.debug()
         human.debug()
+        game_map.debug()
 
     debug.sim(f"Automa score {automa_score}")
     debug.sim(f"Human score {human_score} cities and power {human.power_capacity()}")

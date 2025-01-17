@@ -4,6 +4,8 @@ import random
 import src.debug as debug
 import src.model as model
 
+CITY_WIN_COUNT = 17
+
 power_payouts = {
     0: 10,
     1: 22,
@@ -115,7 +117,7 @@ class Human:
     def build_houses(self,game_map,step):
         if self.houses == 0:
             destination,money = game_map.first_human_city()
-            destination.build_house('human',1)
+            destination.build_house(1,'human')
             self.cities.append(destination)
             self.city_names.append(destination.name)
             self.houses += 1
@@ -124,7 +126,7 @@ class Human:
             can_afford = True
             built = 0
             total_cost = 0
-            while can_afford and self.houses < 15:
+            while can_afford and self.houses < CITY_WIN_COUNT:
                 destination = random.choice(self.cities)
                 direction = model.random_direction()
                 target,city_with_connection_cost = game_map.next_human_city(self.money,direction,destination,step,self.city_names)
@@ -133,7 +135,7 @@ class Human:
                     break
                 if city_with_connection_cost < self.money:
                     debug.game(f'Human building in {target.name} for ${city_with_connection_cost}')
-                    target.build_house('human',step)
+                    target.build_house(step,'human')
                     self.cities.append(target)
                     self.city_names.append(target.name)
                     self.houses += 1
@@ -143,7 +145,7 @@ class Human:
                 else:
                     can_afford = False
             if built == 0:
-                if self.houses >= 15:
+                if self.houses >= CITY_WIN_COUNT:
                     debug.game(f'Human does not need to build any more houses')
                 else:
                     debug.game(f'Human cannot afford to build this turn')

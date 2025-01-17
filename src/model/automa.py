@@ -122,27 +122,33 @@ class Automa:
         debug.game(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
         houses_to_place = self.phase_cards[2].city_build[self.build_index]
         built = 0
-        true_last_city = None
+        last_city = None
         for ii in range(0,houses_to_place):
             debug.game(f'Automa placing house {ii+1} of {houses_to_place}')
             if self.houses == 0:
-                self.build_target = game_map.first_automa_city(direction)
+                build_city,build_cost = game_map.first_automa_city(direction)
+                build_city.build_house(step,'automa')
+                self.build_target = build_city
                 debug.game(f'Automa first city is {self.build_target.name}')
                 self.cities.append(self.build_target)
                 self.city_names.append(self.build_target.name)
                 self.houses += 1
                 built += 1
             else:
-                last_city = game_map.next_automa_city(direction,self.build_target,step,self.city_names)
-                if last_city:
-                    true_last_city = last_city
-                    self.cities.append(last_city)
-                    self.city_names.append(last_city.name)
-                    debug.game(f'Automa built in {last_city.name}')
-                self.houses += 1
-                built += 1
-        if true_last_city:
-            self.build_target = true_last_city
+                build_city,build_cost = game_map.next_automa_city(direction,self.build_target,step)
+                if build_cost != None:
+                    debug.game(f'Automa built in {build_city.name}')
+                    last_city = build_city
+                    build_city.build_house(step,'automa')
+                    self.cities.append(build_city)
+                    self.city_names.append(f'{build_city.name}')
+                    self.houses += 1
+                    built += 1
+                else:
+                    debug.game(f'Automa unable to find a free city')
+        # Move the build target after placing all houses
+        if last_city:
+            self.build_target = last_city
         self.build_index -= 1
         return built
 

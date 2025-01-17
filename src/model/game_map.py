@@ -13,33 +13,41 @@ class City:
         self.added_connection_count = 0
         self.sites = []
 
-    def build_cost(self,step,builder):
-        if len(self.sites) == 0:
-            return 10
-        if step >= 2 and len(self.sites) <= 2:
-            if builder == 'human' and builder in self.sites:
-                return 999
-            return 15
-        if step > 2 and len(self.sites) <= 2:
-            if builder == 'human' and builder in self.sites:
-                return 999
-            return 20
-        return 999
-
     def add_connection(self,connection):
         self.connections[connection.direction] = connection
         self.added_connection_count += 1
 
-    def build_house(self,builder,step):
+    def build_cost(self,step:int,builder:str):
+        if len(self.sites) == 0:
+            return 10
+        if step > 1 and len(self.sites) < 2:
+            if builder == 'human' and builder in self.sites:
+                return None
+            return 15
+        if step > 2 and len(self.sites) < 3:
+            if builder == 'human' and builder in self.sites:
+                return None
+            if builder == 'automa' and self.sites.count('automa') > 1:
+                return None
+            return 20
+        return None
+
+    def build_house(self,step:int,builder:str):
         cost = self.build_cost(step,builder)
+        if cost == None:
+            return cost
         self.sites.append(builder)
+        print(f'Sites for {self.name} - {self.sites}')
         return cost
 
-    def has_open_site(self,step,builder):
-        if builder == 'human':
-            return not 'human' in self.sites
-        if builder == 'automa':
-            return self.sites.count('automa') < 2
+    def has_automa(self):
+        return 'automa' in self.sites
+
+    def has_human(self):
+        return 'human' in self.sites
+
+    def has_open_site(self,step:int,builder:str):
+        return self.build_cost(step,builder) != None
 
     def get_connection(self,direction):
         if direction in self.connections:
@@ -79,8 +87,11 @@ class ConnectionPath:
     def tip(self):
         return self.cities[-1]
 
-    def tip_cost(self,builder,step):
-        return self.cost + self.tip().build_cost(step,builder)
+    def tip_cost(self,step:int,builder:str):
+        build_cost = self.tip().build_cost(step,builder)
+        if build_cost == None:
+            return None
+        return self.cost + build_cost
 
     def walked(self,city):
         return city.name in self.city_lookup
@@ -121,7 +132,7 @@ class GameMap:
         debug.game(f'A player needs to build {self.step_2_city_count} for step 2 and {self.end_game_city_count} for the end game')
 
         self.city_lookup = {}
-        for city in self.definition['cities']:
+        for city in cities_to_ingest:
             self.city_lookup[city[1]] = City(city[0],city[1],city[2])
         for connection in self.definition['connections']:
             # This should only happen if the connection is to a region that is excluded by player count
@@ -134,7 +145,7 @@ class GameMap:
             city.add_connection(Connection(model.get_direction(connection[1]).opposite,connection[0],connection[3]))
             self.city_lookup[connection[2]] = city
         self.automa_start_cities = definition['automa_start_cities']
-        self.validate_cities()
+        #self.validate_cities() -- This doesn't work in < max regions
 
     def validate_cities(self):
         for k,city in self.city_lookup.items():
@@ -158,33 +169,48 @@ class GameMap:
                 destination = self.city_lookup[connection.destination]
                 didnt_build_before = (ignore_cities == None or not connection.destination in ignore_cities)
                 not_in_connection_path = not connection_path.walked(destination)
-                if not_in_connection_path and didnt_build_before :
+                if not_in_connection_path and didnt_build_before:
                     connection_path.add(destination,connection.cost)
-                    if wallet >= connection_path.tip_cost(builder,step):
+                    build_cost = connection_path.tip_cost(step,builder)
+                    if wallet == None or (build_cost != None and wallet >= build_cost) :
                         results += self.walk_connections(wallet,builder,direction,max_distance,step,deepcopy(connection_path))
             dir_check -= 1
-        return sorted(results,key=lambda xx: xx.tip_cost(builder,step))
+        return sorted([yy for yy in results if yy != None],key=lambda xx: xx.tip_cost(step,builder))
 
     def first_automa_city(self,direction:str):
-        city = self.automa_start_cities[direction.lower()]
-        self.city_lookup[city].build_house('automa',1)
-        return self.city_lookup[city]
+        # TODO Have the automa handle per-region starting cities
+        while True:
+            random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
+            if not random_city.has_human():
+                build_cost = random_city.build_cost(1,'automa')
+                return random_city,build_cost
 
-    def next_automa_city(self,direction:str,build_target:City,step:int,ignore_cities:list):
-        connection_paths = self.walk_connections(800,'automa',direction,self.max_connections,step,ConnectionPath(build_target),ignore_cities)
+    def next_automa_city(self,direction:str,build_target:City,step:int):
+        connection_paths = self.walk_connections(None,'automa',direction,self.max_connections,step,ConnectionPath(build_target))
         if len(connection_paths) == 0:
-            return None
-        connection_paths[0].tip().build_house('automa',step)
-        return connection_paths[0].tip()
+            return None,None
+        build_cost = connection_paths[0].tip().build_cost(step,'automa')
+        if build_cost == None:
+            return None,None
+        return self.city_lookup[connection_paths[0].tip().name],build_cost
 
     def first_human_city(self):
-        direction = model.random_direction()
-        random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
-        connection_paths = self.walk_connections(40,'human',direction,self.max_connections,1,ConnectionPath(random_city))
-        return connection_paths[0].tip(),connection_paths[0].cost
+        while True:
+            random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
+            if not random_city.has_automa():
+                return random_city,10
 
     def next_human_city(self,wallet,direction,human_target,step,ignore_cities:list):
         connection_paths = self.walk_connections(wallet,'human',direction,self.max_connections,step,ConnectionPath(human_target),ignore_cities)
         if len(connection_paths) == 0:
             return None,None
-        return connection_paths[0].tip(),connection_paths[0].tip_cost('human',step)
+        build_cost = connection_paths[0].tip_cost(step,'human')
+        if build_cost == None:
+            return None,None
+        return self.city_lookup[connection_paths[0].tip().name],build_cost
+
+    def debug(self):
+        debug.game('=-Game Map-=')
+        for city_name,city in self.city_lookup.items():
+            if len(city.sites) > 0:
+                debug.game(f'{city_name} - {len(city.sites)} - {city.sites}')
