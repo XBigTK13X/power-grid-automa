@@ -1,0 +1,216 @@
+;https://www.reddit.com/r/nanDECK/comments/118x2rf/how_to_combine_two_different_decks_into_one/
+INCLUDE=".\common.nde"
+CARDSIZE=[card_standard_width],[card_standard_height]
+LINK=".\powergrid.csv"
+[all]="1-{(market1)}"
+
+IMAGE=[all],JOIN([base],"art\front\green.png"),0,0,102%,100%,,,75
+IMAGE=[all],JOIN([base],"art\front\white.png"),0,33%,100%,35%,,,66
+
+; Phase 2 - Power Plant Choices
+FONT="DIN Engschrift Std",24,T,#000
+IF=[market1]<>-1
+    IMAGE=[all],JOIN([base],"art\plant.png"),12%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market1],14.5%,10%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),12%,8%,[icon_lg],[icon_lg],,P
+ENDIF
+IF=[market2]<>-1
+    IMAGE=[all],JOIN([base],"art\plant.png"),32%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market2],34.5%,10%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),32%,8%,[icon_lg],[icon_lg],,P
+ENDIF
+
+IF=[market3]<>-1
+    IMAGE=[all],JOIN([base],"art\plant.png"),52%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market3],54.5%,10%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),52%,8%,[icon_lg],[icon_lg],,P
+ENDIF
+
+IF=[market4]<>-1
+    IMAGE=[all],JOIN([base],"art\plant.png"),72%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market4],74.5%,10%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),72%,8%,[icon_lg],[icon_lg],,P
+ENDIF
+
+IMAGE=[all],JOIN([base],"art\next-right.png"),28%,21%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-right.png"),48%,21%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-right.png"),68%,21%,.15,.075
+
+; Phase 2 - Antes
+FONT="DIN Engschrift Std",22,T,#000
+[elektro_size]=[icon_sm]
+[elektro_y]=24%
+[ante_y]=19.5%
+[ante_off]=-4%
+IF=[market1]<>-1
+    IMAGE=[all],JOIN([base],"art\electro.png"),13%+[ante_off],[elektro_y],[icon_sm],[elektro_size],,P
+    TEXT=[all],[ante4],18%+[ante_off],[ante_y],15%,15%,center,center
+ENDIF
+IF=[market2]<>-1
+    IMAGE=[all],JOIN([base],"art\electro.png"),33%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
+    TEXT=[all],[ante3],38%+[ante_off],[ante_y],15%,15%,center,center
+ENDIF
+IF=[market3]<>-1
+    IMAGE=[all],JOIN([base],"art\electro.png"),53%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
+    TEXT=[all],[ante2],58%+[ante_off],[ante_y],15%,15%,center,center
+ENDIF
+IF=[market4]<>-1
+    IMAGE=[all],JOIN([base],"art\electro.png"),73%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
+    TEXT=[all],[ante1],78%+[ante_off],[ante_y],15%,15%,center,center
+ENDIF
+
+; Phase 3 - Resources
+
+[resource_y]=44%
+FONT="DIN Engschrift Std",24,T,#000
+IF=[resource1]<>"0x"
+    IMAGE=[all],JOIN([base],"art\plant.png"),12%,[resource_y],[icon_lg],[icon_lg],,P
+    TEXT=[all],[resource1],14.5%,[resource_y]+2%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),12%,[resource_y],[icon_lg],[icon_lg],,P
+ENDIF
+IF=[resource2]<>"0x"
+    IMAGE=[all],JOIN([base],"art\plant.png"),32%,[resource_y],[icon_lg],[icon_lg],,P
+    TEXT=[all],[resource2],34.5%,[resource_y]+2%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),32%,[resource_y],[icon_lg],[icon_lg],,P
+ENDIF
+IF=[resource3]<>"0x"
+    IMAGE=[all],JOIN([base],"art\plant.png"),52%,[resource_y],[icon_lg],[icon_lg],,P
+    TEXT=[all],[resource3],54.5%,[resource_y]+2%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),52%,[resource_y],[icon_lg],[icon_lg],,P
+ENDIF
+IF=[resource4]<>"0x"
+    IMAGE=[all],JOIN([base],"art\plant.png"),72%,[resource_y],[icon_lg],[icon_lg],,P
+    TEXT=[all],[resource4],74.5%,[resource_y]+2%,[icon_md],[icon_md],center,center
+ELSE
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),72%,[resource_y],[icon_lg],[icon_lg],,P
+ENDIF
+
+IMAGE=[all],JOIN([base],"art\next-left.png"),28%,[resource_y]+13%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-left.png"),48%,[resource_y]+13%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-left.png"),68%,[resource_y]+13%,.15,.075
+
+;IMAGE=[all],JOIN([base],"art\refresh.png"),35.5%,53%,[icon_lg],[icon_lg],,P
+;FONT="DIN Engschrift Std",30,T,#000
+;TEXT=[all],[refill_delta],50.5%,53%,15%,15%,center,center
+
+
+
+; Phase 4 - Build direction
+[house_y]=80%
+[build_y]=70%
+[build_off]=-2%
+
+FONT="DIN Engschrift Std",20,T,#000
+TEXT=[all],[compass_direction],75%+[build_off],[build_y],15%,[icon_md],center,center
+IMAGE=[all],JOIN([base],"art\arrow\",[compass_direction],".png"),73%+[build_off],[house_y]-1.5%,[icon_lg],[icon_lg],,P
+
+;Phase 4 - Build amount
+FONT="DIN Engschrift Std",24,T,#000
+[house_size]=[icon_md]
+IF=[build1]==1
+    TEXT=[all],[build1],15%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),15%+[build_off],[house_y],[house_size],[house_size],,P
+ELSEIF=[build1]>1
+    TEXT=[all],[build1],15%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house-invert.png"),15%+[build_off],[house_y],[house_size],[house_size],,P
+ELSE
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),15%+[build_off],[house_y],[house_size],[house_size],,P
+ENDIF
+IF=[build2]==1
+    TEXT=[all],[build2],30%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),30%+[build_off],[house_y],[house_size],[house_size],,P
+ELSEIF=[build2]>1
+    TEXT=[all],[build2],30%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house-invert.png"),30%+[build_off],[house_y],[house_size],[house_size],,P
+ELSE
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),30%+[build_off],[house_y],[house_size],[house_size],,P
+ENDIF
+IF=[build3]==1
+    TEXT=[all],[build3],45%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),45%+[build_off],[house_y],[house_size],[house_size],,P
+ELSEIF=[build3]>1
+    TEXT=[all],[build3],45%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house-invert.png"),45%+[build_off],[house_y],[house_size],[house_size],,P
+ELSE
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),45%+[build_off],[house_y],[house_size],[house_size],,P
+ENDIF
+IF=[build4]==1
+    TEXT=[all],[build4],60%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),60%+[build_off],[house_y],[house_size],[house_size],,P
+ELSEIF=[build4]>1
+    TEXT=[all],[build4],60%+[build_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house-invert.png"),60%+[build_off],[house_y],[house_size],[house_size],,P
+ELSE
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),60%+[build_off],[house_y],[house_size],[house_size],,P
+ENDIF
+
+IMAGE=[all],JOIN([base],"art\next-left.png"),23%,88%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-left.png"),38%,88%,.15,.075
+IMAGE=[all],JOIN([base],"art\next-left.png"),53%,88%,.15,.075
+
+; CARD ID STAMP
+FONT="Verdana",10,T,#777777
+TEXT=[all],[id],66%,52.5%,1,1,center,center
+FONT="Verdana",10,T,#777777
+TEXT=[all],"v1.4",14%,52.5%,1,1,left,center
+
+; Backs
+IMAGE=25-48,JOIN([base],"art\back\best.jpeg"),0,0,100%,100%,,C
+FONT="DIN Engschrift Std",40,T,#000,,0.025,0.025
+TEXT=25-48,"Frida",15%,75%,50%,15%,left,center
+FONT="DIN Engschrift Std",40,T,#ffffff
+TEXT=25-48,"Frida",15%,75%,50%,15%,left,center
+
+SAVE=[all],JOIN([base],"repo\docs\image\{§}.jpg")
+SAVE=25,JOIN([base],"repo\docs\image\back.jpg")
+PRINT=DUPLEX
+DUPLEX=[all],25-48
+
+
+;  OLD
+
+;TEXT=[all],[build2],48%,[build_y],[icon_md],[icon_md],center,center
+;IMAGE=[all],JOIN([base],"art\house.png"),50%,[house_y],[icon_sm],[icon_sm],,P
+;TEXT=[all],[build3],63%,[build_y],[icon_md],[icon_md],center,center
+;IMAGE=[all],JOIN([base],"art\house.png"),65%,[house_y],[icon_sm],[icon_sm],,P
+;TEXT=[all],[build4],78%,[build_y],[icon_md],[icon_md],center,center
+;IMAGE=[all],JOIN([base],"art\house.png"),80%,[house_y],[icon_sm],[icon_sm],,P
+
+
+;IF = [build] = 1
+;    TEXT=[all],[build4],50%,[build_y],[icon_md],[icon_md],center,center
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),52%,[house_y],[icon_sm],[icon_sm],,P
+;ENDIF
+;IF = [build] = 2
+;    TEXT=[all],[build4],50%,[build_y],[icon_md],[icon_md],center,center
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),52%,[house_y],[icon_sm],[icon_sm],,P
+;    TEXT=[all],[build5],64%,[build_y],[icon_md],[icon_md],center,center
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),66%,[house_y],[icon_sm],[icon_sm],,P
+;ENDIF
+;IF = [build] = 3
+;    TEXT=[all],[build4],50%,[build_y],[icon_md],[icon_md],center,center
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),52%,[house_y],[icon_sm],[icon_sm],,P
+;    TEXT=[all],[build5],64%,[build_y],[icon_md],[icon_md],center,center
+;    TEXT=[all],[build6],78%,[build_y],[icon_md],[icon_md],center,center
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),66%,[house_y],[icon_sm],[icon_sm],,P
+;    IMAGE=[all],JOIN([base],"art\house-invert.png"),80%,[house_y],[icon_sm],[icon_sm],,P
+;ENDIF
+
+;IMAGE=[all],JOIN([base],"art\house.png"),70%,77%,[icon_lg],[icon_lg],,P
+;FONT="DIN Engschrift Std",30,T,#000
+;TEXT=[all],[build],58%,77%,15%,15%,center,center
+
+
+
+
+;[resource_y]=42%
+;TEXT=[all],[mult],31%,[resource_y],15%,15%,center,center
+;IMAGE=[all],JOIN([base],"art\plant.png"),14%,[resource_y],[icon_lg],[icon_lg],,P
+;IMAGE=[all],JOIN([base],"art\face.png"),14%,[resource_y],[icon_lg],[icon_lg],,P

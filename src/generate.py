@@ -101,7 +101,7 @@ def write_cards_to_csv(cards):
         'build1',
         'build2'
     ]
-    with open('../powergrid.csv','w', newline='') as write_handle:
+    with open('./card/powergrid.csv','w', newline='') as write_handle:
         writer = csv.DictWriter(write_handle,headers)
         writer.writeheader()
         writer.writerows(cards)

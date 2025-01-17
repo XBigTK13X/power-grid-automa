@@ -1,0 +1,66 @@
+[base]="K:\board-game\power-grid\automa\"
+
+UNIT=INCH
+DPI=300
+
+[icon_sm]=0.25
+[icon_md]=0.375
+[icon_lg]=0.50
+
+[bleed_in]=0.125+0.125
+
+
+; 44 x 68mm
+[card_mini_euro_width]=1.732283+[bleed_in]
+[card_mini_euro_height]=2.677165+[bleed_in]
+
+[card_standard_width]=2.5+[bleed_in]
+[card_standard_height]=3.5+[bleed_in]
+
+[card_square_width]=2.5+[bleed_in]
+[card_square_height]=2.5+[bleed_in]
+
+[card_square_width_sm]=1.5+[bleed_in]
+[card_square_height_sm]=1.5+[bleed_in]
+
+; 70 x 120mm
+[card_tarot_width]=2.755906
+[card_tarot_height]=4.330709
+
+[font_fancy]="Pokemon Hollow"
+[font_primary]="Pokemon GB"
+[font_title]="Pokemon GB"
+[font_text]="Verdana"
+
+[bleed_color]=#000000
+MARGINS=0.25,0.25,0,0
+;BORDER=RECTANGLE,[bleed_color],.3,MARK,#000,0,.15,.15
+BORDER=NONE,[bleed_color],.25,MARK,#000,0,.125,.125
+PAGE=8.5,11,LANDSCAPE,HV
+
+BASERANGE=,ON
+[font_stamp]="Verdana"
+MACRO = idstamp,(stamprange),(stamp)
+    FONT=[font_stamp],8,T,#333333,,0.01,0.01
+    TEXT=(stamprange),(stamp),78%,78%,20%,20%,center,center,-90
+    FONT=[font_stamp],8,T,#dddddd
+    TEXT=(stamprange),(stamp),78%,78%,20%,20%,center,center,-90
+END
+
+MACRO = debug_card_num,(stamprange)
+    FONT=[font_stamp],11,T,#000
+    TEXT=(stamprange),"{§}",5%,80%,90%,20%,center,wordwrap
+END
+
+MACRO = debug_card_prop,(stamprange),(prop_val)
+    FONT=[font_primary],11,T,#000
+    TEXT=(stamprange),"{§}",5%,75%,20%,20%,center,wordwrap
+    TEXT=(stamprange),(prop_val),75%,75%,20%,20%,center,wordwrap
+END
+
+MACRO = shadowed,(range),(font_style),(font_size),(text),(pos_x),(pos_y),(width),(height),(rotation)
+    FONT=(font_style),(font_size),T,#000000,,0.015,0.015
+    TEXT=(range),(text),(pos_x),(pos_y),(width),(height),center,wwcenter,(rotation)
+    FONT=(font_style),(font_size),T,#ffffff
+    TEXT=(range),(text),(pos_x),(pos_y),(width),(height),center,wwcenter,(rotation)
+END
