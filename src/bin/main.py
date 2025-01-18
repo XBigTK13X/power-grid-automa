@@ -12,4 +12,4 @@ import src.simulate as simulate
 
 cards = generate.create_cards()
 generate.write_cards_to_csv(cards)
-simulate.play_games(cards, GAMES_TO_SIMULATE, MAP, PLAYER_COUNT)
+#simulate.play_games(cards, GAMES_TO_SIMULATE, MAP, PLAYER_COUNT)

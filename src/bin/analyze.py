@@ -41,7 +41,7 @@ def analyze_board(map):
         'player_count_report': player_details
     })
 
-def count_turns(deck):
+def count_turns(build_index,deck):
     deck.pop()
     deck.pop()
     deck.pop()
@@ -52,20 +52,20 @@ def count_turns(deck):
     build_count = 0
     while current_score < end_game_score:
         card = deck[card_index % len(deck)]
-        current_score += card.score
-        build_count += card.build_count
+        current_score += card.city_build[build_index]
+        build_count += card.city_build[build_index]
         card_index += 1
         turns += 1
     return turns,build_count
 
 def analyze_automa():
     cards = [model.AutomaCard(xx) for xx in generate.create_cards()]
-    low_score_turns,low_score_build_count = count_turns(sorted(cards,key=lambda xx:xx.score))
-    high_score_turns,high_score_build_count = count_turns(sorted(cards,key=lambda xx:xx.score,reverse=True))
-    low_build_turns,low_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count))
-    high_build_turns,high_build_build_count = count_turns(sorted(cards,key=lambda xx:xx.build_count,reverse=True))
+    low_build_1_turns,low_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.city_build[0]))
+    high_build_1_turns,high_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.city_build[0],reverse=True))
+    low_build_2_turns,low_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.city_build[1]))
+    high_build_2_turns,high_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.city_build[1],reverse=True))
 
-    print("Market distribution")
+    #print("Market distribution")
     hits = {}
     for market in automa_card_info.manual_plant_choices:
         for hit in market:
@@ -73,24 +73,22 @@ def analyze_automa():
                 hits[hit] = 0
             hits[hit] += 1
 
-    import pprint
-    pprint.pprint(hits,width=2)
+    #import pprint
+    #pprint.pprint(hits,width=2)
 
-    print("Build distribution")
-    hits = {}
-    for manual_build in automa_card_info.manual_builds:
-        for hit in manual_build:
-            if not hit in hits:
-                hits[hit] = 0
-            hits[hit] += 1
-    import pprint
-    pprint.pprint(hits,width=2)
+    #print("Build distribution")
+    #hits = {}
+    #for manual_build in automa_card_info.manual_builds:
+    #    for hit in manual_build:
+    #        if not hit in hits:
+    #            hits[hit] = 0
+    #        hits[hit] += 1
+    #import pprint
+    #pprint.pprint(hits,width=2)
     print(f"The game ends when someone scores 17 points")
-    print(f"The longest the automa will take is {low_score_turns} turns")
-    print(f"The shortest the automa will take is {high_score_turns} turns")
-    print(f"The automa will place at minimum {low_build_build_count} buildings")
-    print(f"The automa will place at maximum {high_build_build_count} buildings")
+    print(f"Automa 1 will take at least {high_build_1_turns} turns and at most {low_build_1_turns}")
+    print(f"Automa 2 will take at least {high_build_2_turns} turns and at most {low_build_2_turns}")
 
-analyze_board(board.united_states_of_america)
-analyze_board(board.germany)
+#analyze_board(board.united_states_of_america)
+#analyze_board(board.germany)
 analyze_automa()

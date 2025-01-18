@@ -31,9 +31,6 @@ def play_game(cards,map,player_count):
     automa = model.Automa(player_count,cards)
     human = model.Human()
 
-    human_score = 0
-    automa_score = 0
-    human_player_order = 3
     turn_count = 0
     first_turn = True
     step = 1
@@ -44,10 +41,17 @@ def play_game(cards,map,player_count):
         'trash':{'human':0,'automa':0,'refill':start_resource_amounts[2]},
         'nuke':{'human':0,'automa':0,'refill':start_resource_amounts[3]}
     }
-    automa_cities_built = 0
+    human_player_order = 3
+    automa_1_player_order = 1
+    automa_2_player_order = 2
+    automa_1_cities_built = 0
+    automa_2_cities_built = 0
     human_cities_built = 0
     debug.sim("Entering sim loop")
-    while automa_score < game_map.end_game_city_count and human_score < game_map.end_game_city_count:
+    player_order_sort = [{'name':'player','score':0,'plant':0},{'name':'automa_1','score':0,'plant':0},{'name':'automa_2','score':0,'plant':0}]
+    while automa_1_cities_built < game_map.end_game_city_count \
+        and automa_2_cities_built < game_map.end_game_city_count \
+        and human_cities_built < game_map.end_game_city_count:
         debug.sim(f"\n\n\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
 
         automa.draw_cards()
@@ -58,6 +62,10 @@ def play_game(cards,map,player_count):
         debug.sim("Determining player order")
         # Phase 1 - Player Order
         if not first_turn:
+            for ii in range(0,len(player_order_sort)):
+                entry = player_order_sort[ii]
+                #if entry.name == 'player'
+            #if human_cities_built
             if automa_score > human_score:
                 human_player_order = player_count
             if human_score > automa_score:

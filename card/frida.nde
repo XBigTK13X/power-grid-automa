@@ -8,75 +8,62 @@ IMAGE=[all],JOIN([base],"art\front\green.png"),0,0,102%,100%,,,75
 IMAGE=[all],JOIN([base],"art\front\white.png"),0,33%,100%,35%,,,66
 
 ; Phase 2 - Power Plant Choices
+FONT="DIN Engschrift Std",22,T,#000
+[elektro_size]=[icon_md]
+[elektro_y]=22%
+[ante_y]=19.5%
+[ante_off]=-4%
 FONT="DIN Engschrift Std",24,T,#000
 IF=[market1]<>-1
-    IMAGE=[all],JOIN([base],"art\plant.png"),28%,8%,[icon_lg],[icon_lg],,P
-    TEXT=[all],[market1],30.5%,10%,[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\plant.png"),20%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market1],22.5%,10%,[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\electro.png"),23%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
+    TEXT=[all],[ante2],32%+[ante_off],[ante_y],15%,15%,center,center
 ELSE
-    IMAGE=[all],JOIN([base],"art\plant-pass.png"),28%,8%,[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),20%,8%,[icon_lg],[icon_lg],,P
 ENDIF
 IF=[market2]<>-1
-    IMAGE=[all],JOIN([base],"art\plant.png"),58%,8%,[icon_lg],[icon_lg],,P
-    TEXT=[all],[market2],60.5%,10%,[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\plant.png"),62.5%,8%,[icon_lg],[icon_lg],,P
+    TEXT=[all],[market2],64.5%,10%,[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\electro.png"),65.5%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
+    TEXT=[all],[ante1],75%+[ante_off],[ante_y],15%,15%,center,center
 ELSE
     IMAGE=[all],JOIN([base],"art\plant-pass.png"),58%,8%,[icon_lg],[icon_lg],,P
 ENDIF
 
-IMAGE=[all],JOIN([base],"art\next-right.png"),20%,13%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-right.png"),50%,13%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-right.png"),80%,13%,.15,.15
-
-; Phase 2 - Antes
-FONT="DIN Engschrift Std",22,T,#000
-[elektro_size]=[icon_sm]
-[elektro_y]=24%
-[ante_y]=19.5%
-[ante_off]=-4%
-IF=[market1]<>-1
-    IMAGE=[all],JOIN([base],"art\electro.png"),30%+[ante_off],[elektro_y],[icon_sm],[elektro_size],,P
-    TEXT=[all],[ante2],35%+[ante_off],[ante_y],15%,15%,center,center
-ENDIF
-IF=[market2]<>-1
-    IMAGE=[all],JOIN([base],"art\electro.png"),60%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
-    TEXT=[all],[ante1],65%+[ante_off],[ante_y],15%,15%,center,center
-ENDIF
-
 ; Phase 3 - Resources
-
 [resource_y]=44%
+[plant_1_x]=20%
 IF=[resource1]<>0
-    IMAGE=[all],JOIN([base],"art\plant.png"),28%,[resource_y]+6%,[icon_lg],[icon_lg],,P
-    IMAGE=[all],JOIN([base],"art\plant.png"),28%,[resource_y],[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_1_x],[resource_y]+5%,[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_1_x],[resource_y],[icon_lg],[icon_lg],,P
     FONT="DIN Engschrift Std",24,T,#ffffff,,0.01,0.01
-    TEXT=[all],"1x",30.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
+    TEXT=[all],"1x",[plant_1_x]+2.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
     FONT="DIN Engschrift Std",24,T,#000
-    TEXT=[all],"1x",30.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
+    TEXT=[all],"1x",[plant_1_x]+2.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
 
-    IMAGE=[all],JOIN([base],"art\plant.png"),28%,[resource_y]-6%,[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_1_x],[resource_y]-5%,[icon_lg],[icon_lg],,P
     FONT="DIN Engschrift Std",24,T,#000
-    TEXT=[all],"2x",30.5%,[resource_y]-4%,[icon_md],[icon_md],center,center
+    TEXT=[all],"2x",[plant_1_x]+2.5%,[resource_y]-3%,[icon_md],[icon_md],center,center
 ELSE
-    IMAGE=[all],JOIN([base],"art\plant-pass.png"),28%,[resource_y],[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),[plant_1_x],[resource_y],[icon_lg],[icon_lg],,P
 ENDIF
 
+[plant_2_x]=62.5%
 IF=[resource2]<>0
-    IMAGE=[all],JOIN([base],"art\plant.png"),58%,[resource_y]+6%,[icon_lg],[icon_lg],,P
-    IMAGE=[all],JOIN([base],"art\plant.png"),58%,[resource_y],[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_2_x],[resource_y]+6%,[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_2_x],[resource_y],[icon_lg],[icon_lg],,P
     FONT="DIN Engschrift Std",24,T,#ffffff,,0.01,0.01
-    TEXT=[all],"1x",60.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
+    TEXT=[all],"1x",[plant_2_x]+2.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
     FONT="DIN Engschrift Std",24,T,#000
-    TEXT=[all],"1x",60.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
+    TEXT=[all],"1x",[plant_2_x]+2.5%,[resource_y]+7%,[icon_md],[icon_md],center,center
 
-    IMAGE=[all],JOIN([base],"art\plant.png"),58%,[resource_y]-6%,[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant.png"),[plant_2_x],[resource_y]-6%,[icon_lg],[icon_lg],,P
     FONT="DIN Engschrift Std",24,T,#000
-    TEXT=[all],"2x",60.5%,[resource_y]-4%,[icon_md],[icon_md],center,center
+    TEXT=[all],"2x",[plant_2_x]+2.5%,[resource_y]-4%,[icon_md],[icon_md],center,center
 ELSE
-    IMAGE=[all],JOIN([base],"art\plant-pass.png"),58%,[resource_y],[icon_lg],[icon_lg],,P
+    IMAGE=[all],JOIN([base],"art\plant-pass.png"),[plant_2_x],[resource_y],[icon_lg],[icon_lg],,P
 ENDIF
-
-IMAGE=[all],JOIN([base],"art\next-left.png"),20%,48%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-left.png"),50%,48%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-left.png"),80%,48%,.15,.15
 
 ; Phase 4 - Build direction
 [house_y]=80%
@@ -85,43 +72,42 @@ IMAGE=[all],JOIN([base],"art\next-left.png"),80%,48%,.15,.15
 [arrow_off]=3%
 
 ;Phase 4 - Build amount
-
-IMAGE=[all],JOIN([base],"art\score-icon.png"),15%+[build_off],75.5%,.5,.5,,P
-FONT="DIN Engschrift Std",18,T,#000,,0.01,0.01
-TEXT=[all],JOIN("+",[score]),17.5%+[build_off],77%,[icon_md],[icon_md],center,center
-FONT="DIN Engschrift Std",18,T,#ffffff
-TEXT=[all],JOIN("+",[score]),17.5%+[build_off],77%,[icon_md],[icon_md],center,center
-
-FONT="DIN Engschrift Std",20,T,#000
 [house_size]=[icon_md]-.1
 IF=[build1]>0
-    TEXT=[all],[build1],34%+[build_off]+[arrow_off],[build_y],[icon_md],[icon_md],center,center
-    IMAGE=[all],JOIN([base],"art\house.png"),36%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
+    IMAGE=[all],JOIN([base],"art\arrow\",[compass_direction_1],".png"),20.5%+[build_off],[build_y]+1%,[icon_md],[icon_md],,P
+    FONT="DIN Engschrift Std",20,T,#000,,0.015,0.015
+    TEXT=[all],[compass_direction_1],20%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
+    FONT="DIN Engschrift Std",20,T,#ffffff
+    TEXT=[all],[compass_direction_1],20%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
+    FONT="DIN Engschrift Std",20,T,#000
+    TEXT=[all],[build1],30%+[build_off]+[arrow_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),32%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
 ELSE
-    IMAGE=[all],JOIN([base],"art\house-pass.png"),35%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),20%,[house_y]-6%,[icon_lg],[icon_lg],P
 ENDIF
+
+
 IF=[build2]>0
-    TEXT=[all],[build2],51.5%+[build_off]+[arrow_off],[build_y],[icon_md],[icon_md],center,center
-    IMAGE=[all],JOIN([base],"art\house.png"),53.5%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
+    IMAGE=[all],JOIN([base],"art\arrow\",[compass_direction_2],".png"),58%+[build_off],[build_y]+1%,[icon_md],[icon_md],,P
+    FONT="DIN Engschrift Std",20,T,#000,,0.015,0.015
+    TEXT=[all],[compass_direction_2],57.5%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
+    FONT="DIN Engschrift Std",20,T,#ffffff
+    TEXT=[all],[compass_direction_2],57.5%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
+    FONT="DIN Engschrift Std",20,T,#000
+    TEXT=[all],[build2],68%+[build_off]+[arrow_off],[build_y],[icon_md],[icon_md],center,center
+    IMAGE=[all],JOIN([base],"art\house.png"),69.5%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
 ELSE
-    IMAGE=[all],JOIN([base],"art\house-pass.png"),53.5%+[build_off]+[arrow_off],[house_y],[house_size],[house_size],,P
+    IMAGE=[all],JOIN([base],"art\house-pass.png"),62.5%,[house_y]-6%,[icon_lg],[icon_lg],,P
 ENDIF
 
-IMAGE=[all],JOIN([base],"art\arrow\",[compass_direction],".png"),75.5%+[build_off],[build_y]+1%,[icon_md],[icon_md],,P
-FONT="DIN Engschrift Std",20,T,#000,,0.015,0.015
-TEXT=[all],[compass_direction],75%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
-FONT="DIN Engschrift Std",20,T,#ffffff
-TEXT=[all],[compass_direction],75%+[build_off],[house_y]-1.5%,15%,[icon_md],center,center
-
-IMAGE=[all],JOIN([base],"art\next-left.png"),28%+[arrow_off],80%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-left.png"),45.5%+[arrow_off],80%,.15,.15
-IMAGE=[all],JOIN([base],"art\next-left.png"),63%+[arrow_off],80%,.15,.15
 
 ; CARD ID STAMP
 FONT="Verdana",10,T,#777777
 TEXT=[all],[id],66%,52.5%,1,1,center,center
 FONT="Verdana",10,T,#777777
-TEXT=[all],"v1.4",14%,52.5%,1,1,left,center
+TEXT=[all],"v1.5",14%,52.5%,1,1,left,center
+
+LINE=[all],50%,10%,50%,90%,#004400,0.05
 
 ; Backs
 IMAGE=25-48,JOIN([base],"art\back\best.jpeg"),0,0,100%,100%,,C
