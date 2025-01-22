@@ -2,43 +2,82 @@ import random
 
 import src.debug as debug
 
+LEFT_SIDE = 0
+RIGHT_SIDE = 1
+
+class AutomaCardHalf:
+    def __init__(self,build_direction,build_amount,plant,ante):
+        self.build_direction = build_direction
+        self.build_amount = build_amount
+        self.market_choice = plant
+        self.market_ante = ante
+
 class AutomaCard:
     def __init__(self,definition):
         self.definition = definition
-        self.plant_auction = [definition['market1'],definition['market2']]
-        self.ante = [definition['ante1'],definition['ante2']]
-        self.city_build = [definition['build1'],definition['build2']]
-        self.build_direction = definition['compass_direction']
-        self.build_count = sum(self.city_build)
+        self.left_half = AutomaCardHalf(
+            definition['compass_direction_1'],
+            definition['build1'],
+            definition['market1'],
+            definition['ante1']
+        )
+        self.right_half = AutomaCardHalf(
+            definition['compass_direction_2'],
+            definition['build2'],
+            definition['market2'],
+            definition['ante2']
+        )
+
         # TODO Actually use the resource skip when indicated
 
-class Automa:
-    def __init__(self,player_count,card_infos):
-        self.money = 10000 # Never updates, this just lets it claim plants at any cost
-        self.player_count = player_count
-        self.deck = [AutomaCard(xx) for xx in card_infos]
-        random.shuffle(self.deck)
+class AutomaPlayer:
+    def __init__(self,name):
+        self.name = name
         self.plant_stack_max = 3
-        self.discard = []
-        self.phase_cards = []
-        self.auction_index = 0
-        self.resource_index = 0
-        self.build_index = 0
-        self.plant_stacks = [[],[]]
-        self.resource_purchase_index = player_count - 2
-        self.build_index = player_count - 2
+        self.money = 10000
         self.houses = 0
-        self.build_target = None
+
+        self.plant_stack = []
+        self.build_target = []
         self.cities = []
         self.city_names = []
 
     def debug(self):
         debug.game('=-Automa Debug-=')
         debug.game("  plants")
-        for stack in self.plant_stacks:
-            debug.game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in stack]}")
+        debug.game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in self.plant_stack]}")
         debug.game(f'  points {self.houses}')
         debug.game(f'  cities {self.city_names}')
+
+    def claim_plant(self,plant):
+        if len(self.plant_stack) < 1:
+            self.plant_stack.append(plant)
+        else:
+            # Tuck a new plant with lower cost immediately under the top plant
+            if self.plant_stack[0].cost > plant.cost:
+                self.plant_stack.insert(1,plant)
+            # Otherwise set it on top of the stack
+            else:
+                self.plant_stack.insert(0,plant)
+        if len(self.plant_stack) > self.plant_stack_max:
+            self.plant_stack.pop()
+        return self.plant_stack
+
+class Automa:
+    def __init__(self,card_infos):
+        self.money = 10000 # Never updates, this just lets it claim plants at any cost
+        self.deck = [AutomaCard(xx) for xx in card_infos]
+        random.shuffle(self.deck)
+        self.discard = []
+        self.phase_cards = []
+        self.left_player = AutomaPlayer('LeftAutoma')
+        self.right_player = AutomaPlayer('RightAutoma')
+
+    def debug(self):
+        debug.game("=-= Left Automa Player =-=")
+        self.left_player.debug()
+        debug.game("=-= Right Automa Player =-=")
+        self.right_player.debug()
 
     def tiebreaker(self):
         # TODO Variant - Average of plants, not highest
@@ -66,53 +105,28 @@ class Automa:
             self.draw_card()
         ]
 
-    def claim_plant(self,plant):
-        stack_index = 0
-        if len(self.plant_stacks[0]) > len(self.plant_stacks[1]):
-            stack_index = 1
-        if len(self.plant_stacks[stack_index]) < 1:
-            self.plant_stacks[stack_index].append(plant)
-        else:
-            if self.plant_stacks[stack_index][0].cost > plant.cost:
-                self.plant_stacks[stack_index].append(plant)
-            else:
-                self.plant_stacks[stack_index].insert(0,plant)
-        if len(self.plant_stacks[stack_index]) > self.plant_stack_max:
-            self.plant_stacks[stack_index] = self.plant_stacks[stack_index][0:self.plant_stack_max]
+    def claim_plant(self,plant,side):
+        player = self.left_player if side == LEFT_SIDE else self.right_player
+        return player.claim_plant(plant)
 
-    def get_plant_auction_index(self):
-        return self.phase_cards[0].plant_auction[self.auction_index]
+    def get_plant_auction_index(self,side):
+        first_card = self.self.phase_cards[0]
+        card_half = first_card.left_half if side == LEFT_SIDE else first_card.right_half
+        return card_half.plant_auction.market_choice
 
-    def get_current_ante(self):
-        return self.phase_cards[0].ante[self.auction_index]
+    def get_current_ante(self,sides_that_bought):
+        highest_ante = 0
+        first_card = self.self.phase_cards[0]
+        for ii in [LEFT_SIDE,RIGHT_SIDE]:
+            if not ii in sides_that_bought:
+                card_half = first_card.left_half if ii == LEFT_SIDE else first_card.right_half
+                if card_half.ante > highest_ante:
+                    highest_ante = card_half.ante
+        return highest_ante
 
-    def next_auction_index(self):
-        self.auction_index += 1
-
-    def reset_indices(self):
-        self.auction_index = 0
-        self.resource_purchase_index = 1
-        self.build_index = 1
-
-    def get_player_order(self,human_plant):
-        human_order = 1
-        for stack in self.plant_stacks:
-            if stack[0].cost < human_plant.cost:
-                return human_order
-            human_order += 1
-        return human_order
-
-    def get_resource_purchase_mult(self):
-        return 1
-        mult = self.phase_cards[1].resource_purchase[self.resource_purchase_index]
-        self.resource_purchase_index -= 1
-        return int(mult[0])
-
-    def get_resource_purchase_plants(self,player_index):
-        if player_index > len(self.plant_stacks) - 1:
-            player_index = len(self.plant_stacks) - 1
-        # TODO All the plants in the stack
-        return self.plant_stacks[player_index]
+    def get_resource_purchase_plants(self,side):
+        player = self.left_player if side == LEFT_SIDE else self.right_player
+        return player.plant_stack
 
     def get_build_score(self):
         return self.phase_cards[2].score

@@ -27,3 +27,5 @@ It might make sense to have a 1p and 2p deck, but I like keeping things simple a
 Maybe the automa has two stacks of plants. It a new purchase is higher, then it goes top the stack. Otherwise it goes bottom the stack.
 
 Automa cannot build a third time in any city!
+
+Recharged market? The main difference you should be aware of is that instead of starting the market with the 8 plants numbered 3-10, you instead use a random 8 plants from numbers 3-15, and also a random card from that group goes on top of the deck instead of no. 13. That's important because any changes to setup in the map rules will be using that as their starting point.
