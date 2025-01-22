@@ -20,7 +20,7 @@ class City:
     def build_cost(self,step:int,builder:str):
         if builder in self.sites:
             return None
-        if len(self.sites) == 0:
+        if len(self.sites) < 1:
             return 10
         if step > 1 and len(self.sites) < 2:
             return 15
@@ -34,12 +34,6 @@ class City:
             return cost
         self.sites.append(builder)
         return cost
-
-    def has_automa(self):
-        return 'LeftAutoma' in self.sites or 'RightAutoma' in self.sites
-
-    def has_human(self):
-        return 'human' in self.sites
 
     def has_open_site(self,step:int,builder:str):
         return self.build_cost(step,builder) != None
@@ -172,19 +166,19 @@ class GameMap:
             dir_check -= 1
         return sorted([yy for yy in results if yy != None],key=lambda xx: xx.tip_cost(step,builder))
 
-    def first_automa_city(self,direction:str):
+    def first_automa_city(self,direction:str,builder:str):
         # TODO Have the automa handle per-region starting cities
         while True:
             random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
-            if not random_city.has_human():
-                build_cost = random_city.build_cost(1,'automa')
+            if len(random_city.sites) == 0:
+                build_cost = random_city.build_cost(1,builder)
                 return random_city,build_cost
 
-    def next_automa_city(self,direction:str,build_target:City,step:int):
-        connection_paths = self.walk_connections(None,'automa',direction,self.max_connections,step,ConnectionPath(build_target))
+    def next_automa_city(self,direction:str,build_target:City,step:int,builder:str):
+        connection_paths = self.walk_connections(None,builder,direction,self.max_connections,step,ConnectionPath(build_target))
         if len(connection_paths) == 0:
             return None,None
-        build_cost = connection_paths[0].tip().build_cost(step,'automa')
+        build_cost = connection_paths[0].tip().build_cost(step,builder)
         if build_cost == None:
             return None,None
         return self.city_lookup[connection_paths[0].tip().name],build_cost
@@ -192,7 +186,7 @@ class GameMap:
     def first_human_city(self):
         while True:
             random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
-            if not random_city.has_automa():
+            if len(random_city.sites) == 0:
                 return random_city,10
 
     def next_human_city(self,wallet,direction,human_target,step,ignore_cities:list):

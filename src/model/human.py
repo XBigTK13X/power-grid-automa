@@ -131,7 +131,7 @@ class Human:
                 direction = model.random_direction()
                 target,city_with_connection_cost = game_map.next_human_city(self.money,direction,destination,step,self.city_names)
                 if target == None:
-                    debug.game("Could not find an open city")
+                    debug.game("Human could not find an open city")
                     break
                 if city_with_connection_cost < self.money:
                     debug.game(f'Human building in {target.name} for ${city_with_connection_cost}')

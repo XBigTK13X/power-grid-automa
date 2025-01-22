@@ -70,7 +70,7 @@ class AutomaPlayer:
         for ii in range(0,houses_to_build):
             debug.game(f'{self.name} placing house {ii+1} of {houses_to_build}')
             if self.houses == 0:
-                build_city,build_cost = game_map.first_automa_city(direction)
+                build_city,build_cost = game_map.first_automa_city(direction,self.name)
                 build_city.build_house(step,self.name)
                 self.build_target = build_city
                 debug.game(f'{self.name} first city is {self.build_target.name}')
@@ -79,7 +79,7 @@ class AutomaPlayer:
                 self.houses += 1
                 built += 1
             else:
-                build_city,build_cost = game_map.next_automa_city(direction,self.build_target,step)
+                build_city,build_cost = game_map.next_automa_city(direction,self.build_target,step,self.name)
                 if build_cost != None:
                     debug.game(f'{self.name} built in {build_city.name}')
                     last_city = build_city

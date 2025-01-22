@@ -53,6 +53,10 @@ def play_game(cards,map,player_count):
         and automa_right_cities_built < game_map.end_game_city_count \
         and human_cities_built < game_map.end_game_city_count:
         debug.sim(f"\n\n\n=-=-=-=-TURN {turn_count + 1 }-=-=-=-=")
+        if turn_count > 20:
+            print("An error occurred during simulation.")
+            print("The game will never take more than 20 turns")
+            return None
 
         automa.draw_cards()
         if first_turn:
@@ -100,12 +104,13 @@ def play_game(cards,map,player_count):
                     plant_market.replace(next_plant)
             else:
                 automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
+                automa_name = 'AutomaLeft' if automa_side == model.LEFT_SIDE else 'AutomaRight'
                 has_bought.append(automa_side)
                 if not plant_market.has_plant(automa.get_plant_auction_index(automa_side)):
                     continue
                 next_plant = plant_market.take_plant(automa.get_plant_auction_index(automa_side))
                 if human_purchased or not human.purchase_plant(plant_market,next_plant,ante):
-                    debug.sim(f"Automa purchased plant {next_plant.cost}")
+                    debug.sim(f"{automa_name} purchased plant {next_plant.cost}")
                     automa.claim_plant(next_plant,automa_side)
                 else:
                     debug.sim(f"Human purchased plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
@@ -132,8 +137,8 @@ def play_game(cards,map,player_count):
         # Phase 3 - Purchase Resources
         debug.sim("Starting resource market")
         game_map.resource_market.debug()
-        for ii in range(1,player_count+1):
-            action_index = player_count + 1 - ii
+        for ii in range(0,player_count):
+            action_index = player_count - ii
             if human_player_order == action_index:
                 filled_orders = human.purchase_resources(game_map.resource_market)
                 for filled_order in filled_orders:
@@ -141,6 +146,7 @@ def play_game(cards,map,player_count):
                 debug.sim(f"Human filled resource orders {filled_orders}")
             else:
                 automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
+                automa_name = 'AutomaLeft' if automa_side == model.LEFT_SIDE else 'AutomaRight'
                 is_first = True
                 for active_plant in automa.get_resource_purchase_plants(automa_side):
                     resource_amount = active_plant.resource_amount
@@ -151,7 +157,7 @@ def play_game(cards,map,player_count):
                         if active_plant.resource_kind == 'oil/coal':
                             start_amounts = game_map.resource_market.amounts()
                             purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,10000)
-                            debug.sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
+                            debug.sim(f"{automa_name} took {taken} {active_plant.resource_kind} from the resource market")
                             end_amounts = game_map.resource_market.amounts()
                             if end_amounts[0] != start_amounts[0]:
                                 resource_purchase_tracker['coal']['automa'] += start_amounts[0] - end_amounts[0]
@@ -160,14 +166,14 @@ def play_game(cards,map,player_count):
                         else:
                             purchased,money,taken = game_map.resource_market.purchase(active_plant.resource_kind,resource_amount,10000)
                             resource_purchase_tracker[active_plant.resource_kind]['automa'] += taken
-                            debug.sim(f"Automa took {taken} {active_plant.resource_kind} from the resource market")
+                            debug.sim(f"{automa_name} took {taken} {active_plant.resource_kind} from the resource market")
         debug.sim("Ending resource market")
         game_map.resource_market.debug()
 
         # Phase 4 - Build Houses
         debug.sim("Starting city building")
-        for ii in range(1,player_count+1):
-            action_index = player_count + 1 - ii
+        for ii in range(0,player_count):
+            action_index = player_count - ii
             if human_player_order == action_index:
                 built,cost = human.build_houses(game_map,step)
                 if built == None:
@@ -177,15 +183,16 @@ def play_game(cards,map,player_count):
                     debug.sim(f'Human built {built} houses for ${cost}')
             else:
                 automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
+                automa_name = 'AutomaLeft' if automa_side == model.LEFT_SIDE else 'AutomaRight'
                 built = automa.build_houses(game_map,step,automa_side)
                 if built == None:
-                    debug.sim("Automa unable to find a free space!")
+                    debug.sim(f"{automa_name} unable to find a free space!")
                 else:
                     if automa_side == model.LEFT_SIDE:
                         automa_left_cities_built += built
                     else:
                         automa_right_cities_built += built
-                    debug.sim(f'Automa built {built} houses')
+                    debug.sim(f'{automa_name} built {built} houses')
 
 
         automa_left_cities_built = automa.left_player.houses
@@ -222,7 +229,7 @@ def play_game(cards,map,player_count):
     debug.sim(f"Human score {human_score} cities and power {human.power_capacity()}")
     #import pprint
     #pprint.pprint(resource_purchase_tracker)
-    debug.sim(f'Left automa built in {automa_left_cities_built} cities, right automa build in {automa_right_cities_built}, and human built in {human_cities_built} cities')
+    debug.sim(f'Left automa built {automa_left_cities_built} , right automa built {automa_right_cities_built}, and human built {human_cities_built}')
     result = model.GameResult()
     result.human_score = human_score
     result.automa_left_cities_built = automa_left_cities_built
