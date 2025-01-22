@@ -1,4 +1,4 @@
-from .automa import Automa,AutomaCard
+from .automa import Automa,AutomaCard,LEFT_SIDE,RIGHT_SIDE
 from .game_map import GameMap
 from .human import Human
 from .resource import ResourceMarket,ResourceRow

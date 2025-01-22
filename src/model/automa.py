@@ -38,7 +38,7 @@ class AutomaPlayer:
         self.houses = 0
 
         self.plant_stack = []
-        self.build_target = []
+        self.build_target = None
         self.cities = []
         self.city_names = []
 
@@ -63,6 +63,38 @@ class AutomaPlayer:
             self.plant_stack.pop()
         return self.plant_stack
 
+    def build_houses(self,houses_to_build,direction,game_map,step):
+        debug.game(f"=={self.name} building {direction} of {self.build_target.name if self.build_target else 'random city'} during step {step}")
+        built = 0
+        last_city = None
+        for ii in range(0,houses_to_build):
+            debug.game(f'{self.name} placing house {ii+1} of {houses_to_build}')
+            if self.houses == 0:
+                build_city,build_cost = game_map.first_automa_city(direction)
+                build_city.build_house(step,self.name)
+                self.build_target = build_city
+                debug.game(f'{self.name} first city is {self.build_target.name}')
+                self.cities.append(self.build_target)
+                self.city_names.append(self.build_target.name)
+                self.houses += 1
+                built += 1
+            else:
+                build_city,build_cost = game_map.next_automa_city(direction,self.build_target,step)
+                if build_cost != None:
+                    debug.game(f'{self.name} built in {build_city.name}')
+                    last_city = build_city
+                    build_city.build_house(step,self.name)
+                    self.cities.append(build_city)
+                    self.city_names.append(f'{build_city.name}')
+                    self.houses += 1
+                    built += 1
+                else:
+                    debug.game(f'{self.name} unable to find a free city')
+        # Move the build target after placing all houses
+        if last_city:
+            self.build_target = last_city
+        return built
+
 class Automa:
     def __init__(self,card_infos):
         self.money = 10000 # Never updates, this just lets it claim plants at any cost
@@ -80,6 +112,7 @@ class Automa:
         self.right_player.debug()
 
     def tiebreaker(self):
+        return 0
         # TODO Variant - Average of plants, not highest
         return self.plant_stacks[0][0].cost
 
@@ -110,18 +143,18 @@ class Automa:
         return player.claim_plant(plant)
 
     def get_plant_auction_index(self,side):
-        first_card = self.self.phase_cards[0]
+        first_card = self.phase_cards[0]
         card_half = first_card.left_half if side == LEFT_SIDE else first_card.right_half
-        return card_half.plant_auction.market_choice
+        return card_half.market_choice
 
     def get_current_ante(self,sides_that_bought):
         highest_ante = 0
-        first_card = self.self.phase_cards[0]
+        first_card = self.phase_cards[0]
         for ii in [LEFT_SIDE,RIGHT_SIDE]:
             if not ii in sides_that_bought:
                 card_half = first_card.left_half if ii == LEFT_SIDE else first_card.right_half
-                if card_half.ante > highest_ante:
-                    highest_ante = card_half.ante
+                if card_half.market_ante > highest_ante:
+                    highest_ante = card_half.market_ante
         return highest_ante
 
     def get_resource_purchase_plants(self,side):
@@ -131,43 +164,13 @@ class Automa:
     def get_build_score(self):
         return self.phase_cards[2].score
 
-    def build_houses(self,game_map,step):
-        direction = self.phase_cards[2].build_direction.lower()
-        debug.game(f"==Automa building {direction} of {self.build_target.name if self.build_target else 'center'} during step {step}")
-        houses_to_place = self.phase_cards[2].city_build[self.build_index]
-        built = 0
-        last_city = None
-        for ii in range(0,houses_to_place):
-            debug.game(f'Automa placing house {ii+1} of {houses_to_place}')
-            if self.houses == 0:
-                build_city,build_cost = game_map.first_automa_city(direction)
-                build_city.build_house(step,'automa')
-                self.build_target = build_city
-                debug.game(f'Automa first city is {self.build_target.name}')
-                self.cities.append(self.build_target)
-                self.city_names.append(self.build_target.name)
-                self.houses += 1
-                built += 1
-            else:
-                build_city,build_cost = game_map.next_automa_city(direction,self.build_target,step)
-                if build_cost != None:
-                    debug.game(f'Automa built in {build_city.name}')
-                    last_city = build_city
-                    build_city.build_house(step,'automa')
-                    self.cities.append(build_city)
-                    self.city_names.append(f'{build_city.name}')
-                    self.houses += 1
-                    built += 1
-                else:
-                    debug.game(f'Automa unable to find a free city')
-        # Move the build target after placing all houses
-        if last_city:
-            self.build_target = last_city
-        self.build_index -= 1
-        return built
+    def build_houses(self,game_map,step,side):
+        player = self.left_player if side == LEFT_SIDE else self.right_player
+        third_card = self.phase_cards[2]
+        active_half = third_card.left_half if side == LEFT_SIDE else third_card.right_half
+        direction = active_half.build_direction.lower()
+        return player.build_houses(active_half.build_amount,direction,game_map,step)
 
-    def has_four_auction_plants(self):
-        for plant in self.phase_cards[0].plant_auction:
-            if plant == -1:
-                return False
-        return True
+    def has_market_skips(self):
+        first_card = self.phase_cards[0]
+        return first_card.left_half.market_choice == -1 or first_card.right_half.market_choice == -1

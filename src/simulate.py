@@ -56,16 +56,17 @@ def play_game(cards,map,player_count):
 
         automa.draw_cards()
         if first_turn:
-            while not automa.has_four_auction_plants():
+            # Both automa players MUST claim a plant during the first turn of the game
+            while automa.has_market_skips():
                 automa.draw_cards()
 
         debug.sim("Determining player order")
         # Phase 1 - Player Order
         if not first_turn:
             player_order_sort = sorted([
-                {'name':'human','score':human_cities_built,'plant':human.plants[0]},
-                {'name':'automa_left','score':automa_left_cities_built,'plant':automa.left_player.plant_stack[0]},
-                {'name':'automa_right','score':automa_right_cities_built,'plant':automa.right_player.plant_stack[0]}
+                {'name':'human','score':human_cities_built,'plant':human.plants[0].cost},
+                {'name':'automa_left','score':automa_left_cities_built,'plant':automa.left_player.plant_stack[0].cost},
+                {'name':'automa_right','score':automa_right_cities_built,'plant':automa.right_player.plant_stack[0].cost}
             ],key=lambda xx:(xx['score'],xx['plant']))
             for ii in range(0,len(player_order_sort)):
                 player_order = player_order_sort[ii]
@@ -98,7 +99,7 @@ def play_game(cards,map,player_count):
                     debug.sim("The human did not purchase a plant")
                     plant_market.replace(next_plant)
             else:
-                automa_side = model.Automa.LEFT_SIDE if action_index == automa_left_player_order else model.Automa.RIGHT_SIDE
+                automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
                 has_bought.append(automa_side)
                 if not plant_market.has_plant(automa.get_plant_auction_index(automa_side)):
                     continue
@@ -113,7 +114,19 @@ def play_game(cards,map,player_count):
                     step = 3
 
         if first_turn:
-            human_player_order = automa.get_player_order(human.get_highest_plant())
+            player_order_sort = sorted([
+                {'name':'human','score':human_cities_built,'plant':human.plants[0].cost},
+                {'name':'automa_left','score':automa_left_cities_built,'plant':automa.left_player.plant_stack[0].cost},
+                {'name':'automa_right','score':automa_right_cities_built,'plant':automa.right_player.plant_stack[0].cost}
+            ],key=lambda xx:(xx['score'],xx['plant']))
+            for ii in range(0,len(player_order_sort)):
+                player_order = player_order_sort[ii]
+                if player_order['name'] == 'human':
+                    human_player_order = ii
+                elif player_order['name'] == 'automa_left':
+                    automa_left_player_order = ii
+                elif player_order['name'] == 'automa_right':
+                    automa_right_player_order = ii
             debug.sim(f"Human's first player order is {human_player_order}")
 
         # Phase 3 - Purchase Resources
@@ -127,7 +140,7 @@ def play_game(cards,map,player_count):
                     resource_purchase_tracker[filled_order[0]]['human'] += filled_order[1]
                 debug.sim(f"Human filled resource orders {filled_orders}")
             else:
-                automa_side = model.Automa.LEFT_SIDE if action_index == automa_left_player_order else model.Automa.RIGHT_SIDE
+                automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
                 is_first = True
                 for active_plant in automa.get_resource_purchase_plants(automa_side):
                     resource_amount = active_plant.resource_amount
@@ -163,12 +176,15 @@ def play_game(cards,map,player_count):
                     human_cities_built += built
                     debug.sim(f'Human built {built} houses for ${cost}')
             else:
-                automa_side = model.Automa.LEFT_SIDE if action_index == automa_left_player_order else model.Automa.RIGHT_SIDE
-                built = automa.build_houses(game_map,step)
+                automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
+                built = automa.build_houses(game_map,step,automa_side)
                 if built == None:
                     debug.sim("Automa unable to find a free space!")
                 else:
-                    automa_cities_built += built
+                    if automa_side == model.LEFT_SIDE:
+                        automa_left_cities_built += built
+                    else:
+                        automa_right_cities_built += built
                     debug.sim(f'Automa built {built} houses')
 
 
@@ -206,7 +222,7 @@ def play_game(cards,map,player_count):
     debug.sim(f"Human score {human_score} cities and power {human.power_capacity()}")
     #import pprint
     #pprint.pprint(resource_purchase_tracker)
-    debug.sim(f'Automa built in {automa_cities_built} cities and human built in {human_cities_built} cities')
+    debug.sim(f'Left automa built in {automa_left_cities_built} cities, right automa build in {automa_right_cities_built}, and human built in {human_cities_built} cities')
     result = model.GameResult()
     result.human_score = human_score
     result.automa_left_cities_built = automa_left_cities_built
@@ -216,9 +232,10 @@ def play_game(cards,map,player_count):
     result.human_power_capacity = human.power_capacity()
     result.automa_tiebreaker = automa.tiebreaker()
     result.human_plants = [x.cost for x in human.plants]
-    result.automa_plants = []
-    for ii in range(0,len(automa.plant_stacks)):
-     result.automa_plants.append([x.cost for x in automa.plant_stacks[ii]])
+    result.left_plants = []
+    result.left_plants.append([x.cost for x in automa.left_player.plant_stack])
+    result.right_plants = []
+    result.right_plants.append([x.cost for x in automa.right_player.plant_stack])
     result.human_win = result.calculate_winner()
     debug.sim(f"The game took {turn_count} turns")
     return result

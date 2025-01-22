@@ -18,17 +18,13 @@ class City:
         self.added_connection_count += 1
 
     def build_cost(self,step:int,builder:str):
+        if builder in self.sites:
+            return None
         if len(self.sites) == 0:
             return 10
         if step > 1 and len(self.sites) < 2:
-            if builder == 'human' and builder in self.sites:
-                return None
             return 15
         if step > 2 and len(self.sites) < 3:
-            if builder == 'human' and builder in self.sites:
-                return None
-            if builder == 'automa' and self.sites.count('automa') > 1:
-                return None
             return 20
         return None
 
@@ -40,7 +36,7 @@ class City:
         return cost
 
     def has_automa(self):
-        return 'automa' in self.sites
+        return 'LeftAutoma' in self.sites or 'RightAutoma' in self.sites
 
     def has_human(self):
         return 'human' in self.sites
