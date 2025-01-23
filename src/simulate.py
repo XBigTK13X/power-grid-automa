@@ -1,5 +1,6 @@
 import src.debug as debug
 import src.model as model
+import src.plant_deck as plant_deck
 
 def play_games(cards, amount, map, player_count):
     print(f"Simulating {amount} games of Power Grid")
@@ -27,7 +28,7 @@ def play_games(cards, amount, map, player_count):
 def play_game(cards,map,player_count):
     debug.sim("Setting up a new game")
     game_map = model.GameMap(map,player_count)
-    plant_market = model.PlantMarket(model.original_plants)
+    plant_market = model.PlantMarket(plant_deck.base_game_plants)
     automa = model.Automa(cards)
     human = model.Human()
 

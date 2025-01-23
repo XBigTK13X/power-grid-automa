@@ -1,51 +1,5 @@
 import random
 
-original_plants = [
-    [3,2,'oil',1],
-    [4,2,'coal',1],
-    [5,2,'oil/coal',1],
-    [6,1,'trash',1],
-    [7,3,'oil',2],
-    [8,3,'coal',2],
-    [9,1,'oil',1],
-    [10,2,'coal',2],
-    [11,1,'nuke',2],
-    [12,2,'oil/coal',2],
-    [13,0,'wind',1],
-    [14,2,'trash',2],
-    [15,2,'coal',3],
-    [16,2,'oil',3],
-    [17,1,'nuke',2],
-    [18,0,'wind',2],
-    [19,2,'trash',3],
-    [20,3,'coal',5],
-    [21,2,'oil/coal',4],
-    [22,0,'wind',4],
-    [23,1,'nuke',3],
-    [24,2,'trash',4],
-    [25,2,'coal',5],
-    [26,2,'oil',5],
-    [27,0,'wind',3],
-    [28,1,'nuke',4],
-    [29,1,'oil/coal',3],
-    [30,3,'trash',6],
-    [31,3,'coal',6],
-    [32,3,'oil',6],
-    [33,0,'wind',4],
-    [34,1,'nuke',5],
-    [35,1,'oil',5],
-    [36,3,'coal',7],
-    [37,0,'wind',4],
-    [38,3,'trash',7],
-    [39,1,'nuke',6],
-    [40,2,'oil',6],
-    [42,2,'coal',6],
-    [44,0,'wind',5],
-    [46,3,'oil/coal',7],
-    [50,0,'wind',6],
-    [0,0,'step3',0]
-]
-
 class PlantCard:
     def __init__(self,definition:dict):
         self.cost = definition[0]
