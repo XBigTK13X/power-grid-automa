@@ -8,6 +8,7 @@ class GameResult:
         self.human_money = 0
         self.human_plants = []
         self.human_power_capacity = 0
+        self.human_cities_built = 0
         self.human_score = 0
         self.human_win = False
         self.turns_taken = 0
@@ -26,6 +27,8 @@ class GameResult:
         # TODO Actually calculate how many plants will fire, not just capacity
         if self.human_score > self.human_power_capacity:
             self.human_score = self.human_power_capacity
+        else:
+            self.human_score = self.human_cities_built
         if competing_score > self.human_score:
             debug.sim(f"{competing_automa} wins")
             self.automa_city_win = True
