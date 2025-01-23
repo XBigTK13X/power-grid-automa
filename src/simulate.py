@@ -72,7 +72,7 @@ def play_game(cards,map,player_count):
                 {'name':'human','score':human_cities_built,'plant':human.plants[0].cost},
                 {'name':'automa_left','score':automa_left_cities_built,'plant':automa.left_player.plant_stack[0].cost},
                 {'name':'automa_right','score':automa_right_cities_built,'plant':automa.right_player.plant_stack[0].cost}
-            ],key=lambda xx:(xx['score'],xx['plant']))
+            ],key=lambda xx:(xx['score'],xx['plant']),reverse=True)
             for ii in range(0,len(player_order_sort)):
                 player_order = player_order_sort[ii]
                 if player_order['name'] == 'human':
@@ -179,6 +179,7 @@ def play_game(cards,map,player_count):
         for ii in range(0,player_count):
             action_index = player_count - ii - 1
             if human_player_order == action_index:
+                debug.sim("Human's turn to build houses")
                 built,cost = human.build_houses(game_map,step)
                 if built == None:
                     debug.sim("Human unable to find a free space!")
@@ -188,6 +189,7 @@ def play_game(cards,map,player_count):
             else:
                 automa_side = model.LEFT_SIDE if action_index == automa_left_player_order else model.RIGHT_SIDE
                 automa_name = 'AutomaLeft' if automa_side == model.LEFT_SIDE else 'AutomaRight'
+                debug.sim(f"{automa_name} turn to build houses")
                 built = automa.build_houses(game_map,step,automa_side)
                 if built == None:
                     debug.sim(f"{automa_name} unable to find a free space!")
@@ -236,18 +238,22 @@ def play_game(cards,map,player_count):
     #pprint.pprint(resource_purchase_tracker)
     debug.sim(f'Left automa built {automa_left_cities_built} , right automa built {automa_right_cities_built}, and human built {human_cities_built}')
     result = model.GameResult()
-    result.human_score = human_score
-    result.automa_left_cities_built = automa_left_cities_built
-    result.automa_right_score = automa_right_cities_built
     result.turns_taken = turn_count
+
     result.human_money = human.money
     result.human_power_capacity = human.power_capacity()
+    result.human_score = human_score
+    result.left_cities_built = automa_left_cities_built
+    result.right_cities_built = automa_left_cities_built
+
     result.automa_tiebreaker = automa.tiebreaker()
+
     result.human_plants = [x.cost for x in human.plants]
     result.left_plants = []
     result.left_plants.append([x.cost for x in automa.left_player.plant_stack])
     result.right_plants = []
     result.right_plants.append([x.cost for x in automa.right_player.plant_stack])
+
     result.human_win = result.calculate_winner()
     debug.sim(f"The game took {turn_count} turns")
     return result

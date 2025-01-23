@@ -15,22 +15,28 @@ class GameResult:
         self.human_city_win = False
         self.automa_tiebreaker_win = False
         self.human_tiebreaker_win = False
+        self.left_plants = []
+        self.right_plants = []
+        self.left_cities_built = 0
+        self.right_cities_built = 0
 
     def calculate_winner(self):
+        competing_automa = 'LeftAutoma' if self.left_cities_built >= self.right_cities_built else 'RightAutoma'
+        competing_score = self.left_cities_built if self.left_cities_built >= self.right_cities_built else self.right_cities_built
         # TODO Actually calculate how many plants will fire, not just capacity
         if self.human_score > self.human_power_capacity:
             self.human_score = self.human_power_capacity
-        if self.automa_score > self.human_score:
-            debug.sim("Automa wins")
+        if competing_score > self.human_score:
+            debug.sim(f"{competing_automa} wins")
             self.automa_city_win = True
             return False
-        if self.automa_score < self.human_score:
+        if competing_score < self.human_score:
             debug.sim("Human wins")
             self.human_city_win = True
             return True
-        if self.automa_score == self.human_score:
+        if competing_score == self.human_score:
             if self.human_power_capacity < self.human_score:
-                debug.sim("Automa wins")
+                debug.sim(f"{competing_automa} wins")
                 self.tiebreaker_automa_win = True
                 return False
             else:

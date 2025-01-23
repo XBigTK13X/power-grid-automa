@@ -112,9 +112,9 @@ class Automa:
         self.right_player.debug()
 
     def tiebreaker(self):
-        return 0
-        # TODO Variant - Average of plants, not highest
-        return self.plant_stacks[0][0].cost
+        left_top = self.left_player.plant_stack[0].cost
+        right_top = self.right_player.plant_stack[0].cost
+        return left_top if left_top > right_top else right_top
 
     def draw_card(self):
         if len(self.deck) <= 0:

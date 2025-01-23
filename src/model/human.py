@@ -117,6 +117,7 @@ class Human:
     def build_houses(self,game_map,step):
         if self.houses == 0:
             destination,money = game_map.first_human_city()
+            debug.sim(f"Human built first house in {destination.name}")
             destination.build_house(1,'Human')
             self.cities.append(destination)
             self.city_names.append(destination.name)

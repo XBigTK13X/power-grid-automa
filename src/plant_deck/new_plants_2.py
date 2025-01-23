@@ -4,6 +4,7 @@ new_plants_2 = [
     [5,2,'trash',1],
     [6,1,'oil',1],
     [7,1,'coal',1],
+    # TODO oil/trash not supported by the simulator
     [8,3,'oil/trash',2],
     [9,3,'coal',2],
     [10,2,'oil',2],
