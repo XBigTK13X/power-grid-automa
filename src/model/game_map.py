@@ -190,10 +190,10 @@ class GameMap:
                 return random_city,10
 
     def next_human_city(self,wallet,direction,human_target,step,ignore_cities:list):
-        connection_paths = self.walk_connections(wallet,'human',direction,self.max_connections,step,ConnectionPath(human_target),ignore_cities)
+        connection_paths = self.walk_connections(wallet,'Human',direction,self.max_connections,step,ConnectionPath(human_target),ignore_cities)
         if len(connection_paths) == 0:
             return None,None
-        build_cost = connection_paths[0].tip_cost(step,'human')
+        build_cost = connection_paths[0].tip_cost(step,'Human')
         if build_cost == None:
             return None,None
         return self.city_lookup[connection_paths[0].tip().name],build_cost

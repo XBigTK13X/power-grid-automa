@@ -41,14 +41,14 @@ def play_game(cards,map,player_count):
         'trash':{'human':0,'automa':0,'refill':start_resource_amounts[2]},
         'nuke':{'human':0,'automa':0,'refill':start_resource_amounts[3]}
     }
-    automa_left_player_order = 1
-    human_player_order = 2
-    automa_right_player_order = 3
+    automa_left_player_order = 0
+    automa_right_player_order = 2
+    human_player_order = 1
+
     automa_left_cities_built = 0
     automa_right_cities_built = 0
     human_cities_built = 0
     debug.sim("Entering sim loop")
-    player_order_sort = [{'name':'player','score':0,'plant':0},{'name':'automa_1','score':0,'plant':0},{'name':'automa_2','score':0,'plant':0}]
     while automa_left_cities_built < game_map.end_game_city_count \
         and automa_right_cities_built < game_map.end_game_city_count \
         and human_cities_built < game_map.end_game_city_count:
@@ -64,7 +64,7 @@ def play_game(cards,map,player_count):
             while automa.has_market_skips():
                 automa.draw_cards()
 
-        debug.sim("Determining player order")
+        debug.sim("\n - Phase 1 - Player Order")
         # Phase 1 - Player Order
         if not first_turn:
             player_order_sort = sorted([
@@ -80,13 +80,15 @@ def play_game(cards,map,player_count):
                     automa_left_player_order = ii
                 elif player_order['name'] == 'automa_right':
                     automa_right_player_order = ii
-        debug.sim(f"Human is player {human_player_order} with ${human.money}")
+        debug.sim(f"Human is player {human_player_order} starting with ${human.money}")
+        debug.sim(f"AutomaLeft is player {automa_left_player_order} ")
+        debug.sim(f"AutomaRight is player {automa_right_player_order}")
 
         # Phase 2 - Plant Auction
         human_purchased = False
-        debug.sim("Purchasing plants")
+        debug.sim("\n - Phase 2 - Power Plant Auction")
         has_bought = []
-        for action_index in range(1,player_count+1):
+        for action_index in range(0,player_count):
             if plant_market.is_empty():
                 continue
             ante = automa.get_current_ante(has_bought)
@@ -111,6 +113,7 @@ def play_game(cards,map,player_count):
                 next_plant = plant_market.take_plant(automa.get_plant_auction_index(automa_side))
                 if human_purchased or not human.purchase_plant(plant_market,next_plant,ante):
                     debug.sim(f"{automa_name} purchased plant {next_plant.cost}")
+                    debug.sim(f"{automa_name} plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
                     automa.claim_plant(next_plant,automa_side)
                 else:
                     debug.sim(f"Human purchased plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
@@ -132,13 +135,13 @@ def play_game(cards,map,player_count):
                     automa_left_player_order = ii
                 elif player_order['name'] == 'automa_right':
                     automa_right_player_order = ii
-            debug.sim(f"Human's first player order is {human_player_order}")
+            debug.sim(f"Human's first turn player order is {human_player_order}")
 
         # Phase 3 - Purchase Resources
-        debug.sim("Starting resource market")
+        debug.sim("\n - Phase 3 - Purchase Resources")
         game_map.resource_market.debug()
-        for ii in range(0,player_count):
-            action_index = player_count - ii
+        for ii in range(0, player_count):
+            action_index = player_count - ii - 1
             if human_player_order == action_index:
                 filled_orders = human.purchase_resources(game_map.resource_market)
                 for filled_order in filled_orders:
@@ -171,9 +174,9 @@ def play_game(cards,map,player_count):
         game_map.resource_market.debug()
 
         # Phase 4 - Build Houses
-        debug.sim("Starting city building")
+        debug.sim("\n - Phase 4 - Build Cities")
         for ii in range(0,player_count):
-            action_index = player_count - ii
+            action_index = player_count - ii - 1
             if human_player_order == action_index:
                 built,cost = human.build_houses(game_map,step)
                 if built == None:
@@ -205,6 +208,7 @@ def play_game(cards,map,player_count):
                 step = 2
 
         # Phase 5 - Bureaucracy
+        debug.sim('\n - Phase 5 - Bureaucracy')
         refill_amounts = game_map.resource_market.refill_phase(step)
         for kind,amount in refill_amounts.items():
             resource_purchase_tracker[kind]['refill'] += amount

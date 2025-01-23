@@ -117,7 +117,7 @@ class Human:
     def build_houses(self,game_map,step):
         if self.houses == 0:
             destination,money = game_map.first_human_city()
-            destination.build_house(1,'human')
+            destination.build_house(1,'Human')
             self.cities.append(destination)
             self.city_names.append(destination.name)
             self.houses += 1
@@ -135,7 +135,7 @@ class Human:
                     break
                 if city_with_connection_cost < self.money:
                     debug.game(f'Human building in {target.name} for ${city_with_connection_cost}')
-                    target.build_house(step,'human')
+                    target.build_house(step,'Human')
                     self.cities.append(target)
                     self.city_names.append(target.name)
                     self.houses += 1
