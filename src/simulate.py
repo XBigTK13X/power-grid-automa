@@ -34,7 +34,7 @@ class SimulatedGame:
         while self.automa_left_cities_built < self.game_map.end_game_city_count \
             and self.automa_right_cities_built < self.game_map.end_game_city_count \
             and self.human_cities_built < self.game_map.end_game_city_count:
-            debug.sim(f"\n\n\n=-=-=-=-TURN {self.turn_count + 1 }-=-=-=-=")
+            debug.sim(f"\n\n\n=-=-=-=-TURN {self.turn_count + 1 } - Step {self.step}-=-=-=-=")
             if self.turn_count > 20:
                 print("An error occurred during simulation.")
                 print("The game will never take more than 20 turns")

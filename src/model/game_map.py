@@ -101,30 +101,19 @@ class GameMap:
 
         cities_to_ingest = []
         region = random.choice(self.definition['region_ids'])
-        if self.regions_used < 6:
-            regions = []
-            debug.game(f"Building region chain starting at region {region}")
-            short_circuit = 100
-            while len(regions) < self.regions_used:
-                short_circuit -= 1
-                if short_circuit <= 0:
-                    import sys
-                    print("An error occurred while selecting regions")
-                    print(regions)
-                    sys.exit(1)
-                if not region in regions:
-                    for city in self.definition['cities']:
-                        if city[0] == region:
-                            cities_to_ingest.append(city)
-                    regions.append(region)
-                    for region_connection in self.definition['region_connections']:
-                        if region_connection[0] == region and not region_connection[1] in regions:
-                            region = region_connection[1]
-                        elif region_connection[1] == region and not region_connection[0] in regions:
-                            region = region_connection[0]
-            debug.game(f'Using regions {regions}')
-        else:
-            cities_to_ingest = self.definition['cities']
+        regions = [region]
+        random.shuffle(self.definition['region_connections'])
+        for connection in self.definition['region_connections']:
+            if connection[0] == region and not connection[1] in regions and len(regions) < 3:
+                regions.append(connection[1])
+            if connection[0] == region and not connection[1] in regions and len(regions) < 3:
+                regions.append(connection[1])
+            if len(regions) == 3:
+                break
+        debug.game(f'Using regions {regions}')
+        for city in self.definition['cities']:
+            if city[0] in regions:
+                cities_to_ingest.append(city)
         debug.game(f'There are {len(cities_to_ingest) * 3} spaces to build cities. Only {len(cities_to_ingest)} are usable by the human')
         debug.game(f'A player needs to build {self.step_2_city_count} for step 2 and {self.end_game_city_count} for the end game')
 
@@ -164,9 +153,7 @@ class GameMap:
             connection = city.get_connection(direction)
             if connection != None:
                 destination = self.city_lookup[connection.destination]
-                didnt_build_before = (ignore_cities == None or not connection.destination in ignore_cities)
-                not_in_connection_path = not connection_path.walked(destination)
-                if not_in_connection_path and didnt_build_before:
+                if not destination.name in connection_path.city_lookup and not builder in destination.sites:
                     connection_path.add(destination,connection.cost)
                     build_cost = connection_path.tip_cost(step,builder)
                     if build_cost != None and (wallet == None or wallet >= build_cost) :
