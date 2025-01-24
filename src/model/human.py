@@ -50,8 +50,7 @@ class Human:
         debug.game(f'  money {self.money}')
         debug.game("  plants")
         debug.game([f'  #{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in self.plants])
-        debug.game(f'  points {self.houses}')
-        debug.game(f'  cities')
+        debug.game(f'  cities {len(self.city_names)}')
         debug.game(f'  {self.city_names}')
 
     def purchase_plant(self,plant_market,new_plant,ante,can_ignore=True):

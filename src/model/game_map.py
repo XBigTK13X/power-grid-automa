@@ -104,17 +104,24 @@ class GameMap:
         if self.regions_used < 6:
             regions = []
             debug.game(f"Building region chain starting at region {region}")
+            short_circuit = 100
             while len(regions) < self.regions_used:
+                short_circuit -= 1
+                if short_circuit <= 0:
+                    import sys
+                    print("An error occurred while selecting regions")
+                    print(regions)
+                    sys.exit(1)
                 if not region in regions:
                     for city in self.definition['cities']:
                         if city[0] == region:
                             cities_to_ingest.append(city)
                     regions.append(region)
-                for region_connection in self.definition['region_connections']:
-                    if region_connection[0] == region and not region_connection[1] in regions:
-                        region = region_connection[1]
-                    elif region_connection[1] == region and not region_connection[0] in regions:
-                        region = region_connection[0]
+                    for region_connection in self.definition['region_connections']:
+                        if region_connection[0] == region and not region_connection[1] in regions:
+                            region = region_connection[1]
+                        elif region_connection[1] == region and not region_connection[0] in regions:
+                            region = region_connection[0]
             debug.game(f'Using regions {regions}')
         else:
             cities_to_ingest = self.definition['cities']

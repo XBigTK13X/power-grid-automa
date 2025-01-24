@@ -234,6 +234,7 @@ def play_games(cards, amount, map, player_count):
         if(ii % 100 == 0):
             print(f"Simulating game {ii+1}/{amount}")
         result = play_game(cards,map,player_count)
+        debug.flush(ii)
         results.append(result)
         if result.human_win:
             tallies[0]+=1

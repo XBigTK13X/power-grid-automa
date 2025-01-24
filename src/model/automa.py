@@ -43,11 +43,11 @@ class AutomaPlayer:
         self.city_names = []
 
     def debug(self):
-        debug.game('=-Automa Debug-=')
+        debug.game(f'=-{self.name}-=')
         debug.game("  plants")
         debug.game(f"  {[f'#{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}' for x in self.plant_stack]}")
-        debug.game(f'  points {self.houses}')
-        debug.game(f'  cities {self.city_names}')
+        debug.game(f'  cities {len(self.city_names)}')
+        debug.game(f'{self.city_names}')
 
     def claim_plant(self,plant):
         if len(self.plant_stack) < 1:
