@@ -1,6 +1,7 @@
 DEBUG_GAME=False
 DEBUG_SIM=False
 DEBUG_RESULT=False
+LOG_FILES=True
 
 import os
 
@@ -28,5 +29,8 @@ def result(message):
 
 
 def flush(log_index):
-    with open(f'./log/sim-{log_index}.log','w') as write_handle:
-        write_handle.write(log_file_content)
+    global log_file_content
+    if LOG_FILES:
+        with open(f'./log/sim-{log_index}.log','w') as write_handle:
+            write_handle.write(log_file_content)
+    log_file_content = ''

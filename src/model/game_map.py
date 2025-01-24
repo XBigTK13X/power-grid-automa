@@ -106,8 +106,8 @@ class GameMap:
         for connection in self.definition['region_connections']:
             if connection[0] == region and not connection[1] in regions and len(regions) < 3:
                 regions.append(connection[1])
-            if connection[0] == region and not connection[1] in regions and len(regions) < 3:
-                regions.append(connection[1])
+            if connection[1] == region and not connection[0] in regions and len(regions) < 3:
+                regions.append(connection[0])
             if len(regions) == 3:
                 break
         debug.game(f'Using regions {regions}')
