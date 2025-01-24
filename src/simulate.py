@@ -29,11 +29,14 @@ class SimulatedGame:
         self.automa_right_cities_built = 0
         self.human_cities_built = 0
 
+    def game_is_over(self):
+        return self.automa_left_cities_built >= self.game_map.end_game_city_count \
+            or self.automa_right_cities_built >= self.game_map.end_game_city_count \
+            or self.human_cities_built >= self.game_map.end_game_city_count
+
     def play(self):
         debug.sim("Entering sim loop")
-        while self.automa_left_cities_built < self.game_map.end_game_city_count \
-            and self.automa_right_cities_built < self.game_map.end_game_city_count \
-            and self.human_cities_built < self.game_map.end_game_city_count:
+        while not self.game_is_over():
             debug.sim(f"\n\n\n=-=-=-=-TURN {self.turn_count + 1 } - Step {self.step}-=-=-=-=")
             if self.turn_count > 20:
                 print("An error occurred during simulation.")
@@ -181,15 +184,16 @@ class SimulatedGame:
                 or self.human_cities_built > self.game_map.step_2_city_count:
                 self.step = 2
 
-        refill_amounts = self.game_map.resource_market.refill_phase(self.step)
-        for kind,amount in refill_amounts.items():
-            self.resource_purchase_tracker[kind]['refill'] += amount
-        self.human.power_cities()
-        if self.step == 1 or self.step == 2:
-            if self.plant_market.cycle_highest():
-                self.step = 3
-        if self.step == 3:
-            self.plant_market.remove_lowest()
+        if not self.game_is_over():
+            refill_amounts = self.game_map.resource_market.refill_phase(self.step)
+            for kind,amount in refill_amounts.items():
+                self.resource_purchase_tracker[kind]['refill'] += amount
+            self.human.power_cities()
+            if self.step == 1 or self.step == 2:
+                if self.plant_market.cycle_highest():
+                    self.step = 3
+            if self.step == 3:
+                self.plant_market.remove_lowest()
         self.first_turn = False
         self.turn_count += 1
         debug.sim(f"Finished turn {self.turn_count} on step {self.step}")
@@ -221,6 +225,9 @@ class SimulatedGame:
         result.left_plants.append([x.cost for x in self.automa.left_player.plant_stack])
         result.right_plants = []
         result.right_plants.append([x.cost for x in self.automa.right_player.plant_stack])
+
+        result.resource_purchase_tracker = self.resource_purchase_tracker
+        result.resource_market = self.game_map.resource_market
 
         result.human_win = result.calculate_winner()
         debug.sim(f"The game took {self.turn_count} turns")

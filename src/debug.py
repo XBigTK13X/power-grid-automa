@@ -1,7 +1,7 @@
 DEBUG_GAME=False
 DEBUG_SIM=False
 DEBUG_RESULT=False
-LOG_FILES=True
+LOG_FILES=False
 
 import os
 
