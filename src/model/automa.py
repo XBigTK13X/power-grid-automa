@@ -64,7 +64,7 @@ class AutomaPlayer:
         return self.plant_stack
 
     def build_houses(self,houses_to_build,direction,game_map,step):
-        debug.game(f"=={self.name} building {direction} of {self.build_target.name if self.build_target else 'random city'} during step {step}")
+        debug.game(f"=={self.name} building {houses_to_build} houses {direction} of {self.build_target.name if self.build_target else 'random city'} during step {step}")
         built = 0
         last_city = None
         for ii in range(0,houses_to_build):

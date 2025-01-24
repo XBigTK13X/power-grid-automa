@@ -129,9 +129,9 @@ class Human:
             while can_afford and self.houses < CITY_WIN_COUNT:
                 destination = random.choice(self.cities)
                 direction = model.random_direction()
-                target,city_with_connection_cost = game_map.next_human_city(self.money,direction,destination,step,self.city_names)
+                target,city_with_connection_cost = game_map.next_human_city(self.money,direction,destination,step)
                 if target == None:
-                    debug.game("Human could not find an open city")
+                    debug.game(f"Human could not afford another city with ${self.money}")
                     break
                 if city_with_connection_cost < self.money:
                     debug.game(f'Human building in {target.name} for ${city_with_connection_cost}')

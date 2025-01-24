@@ -166,7 +166,7 @@ class SimulatedGame:
                 debug.sim(f"{automa_name} turn to build houses")
                 built = self.automa.build_houses(self.game_map,self.step,automa_side)
                 if built == None:
-                    debug.sim(f"{automa_name} unable to find a free space!")
+                    debug.sim(f"{automa_name} unable to build any houses")
                 else:
                     debug.sim(f'{automa_name} built {built} houses')
 

@@ -49,6 +49,12 @@ class City:
         for k,v in self.connections.items():
             v.debug()
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f'{self.name} - ({self.sites})'
+
 class Connection:
     def __init__(self,direction,destination,cost):
         self.direction = direction
@@ -85,11 +91,15 @@ class ConnectionPath:
     def walked(self,city):
         return city.name in self.city_lookup
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f'{self.cost} - {self.cities}'
+
 class GameMap:
     def __init__(self,definition:dict,player_count):
         self.definition = definition
-        # Short circuit recursive search for open spaces to build
-        self.max_connections = 21
 
         self.player_info = self.definition['player_count_info'][player_count-2]
         self.resource_market = model.ResourceMarket(self.definition['start_resources'],self.player_info[-1])
@@ -110,7 +120,21 @@ class GameMap:
                 regions.append(connection[0])
             if len(regions) == 3:
                 break
+        if len(regions) == 2:
+            region = regions[1]
+            for connection in self.definition['region_connections']:
+                if connection[0] == region and not connection[1] in regions and len(regions) < 3:
+                    regions.append(connection[1])
+                if connection[1] == region and not connection[0] in regions and len(regions) < 3:
+                    regions.append(connection[0])
+                if len(regions) == 3:
+                    break
         debug.game(f'Using regions {regions}')
+        if len(regions) < self.regions_used:
+            print("An error occurred while picking regions")
+            print(regions)
+            import sys
+            sys.exit(1)
         for city in self.definition['cities']:
             if city[0] in regions:
                 cities_to_ingest.append(city)
@@ -141,8 +165,8 @@ class GameMap:
                 import sys
                 sys.exit(1)
 
-    def walk_connections(self,wallet,builder,direction,max_distance,step,connection_path,ignore_cities=None):
-        if connection_path.length() >= max_distance or connection_path.tip().has_open_site(step,builder):
+    def walk_connections(self,wallet,builder,direction,step,connection_path):
+        if connection_path.tip().has_open_site(step,builder):
             return [connection_path]
         results = []
         dir_check = 8
@@ -153,24 +177,24 @@ class GameMap:
             connection = city.get_connection(direction)
             if connection != None:
                 destination = self.city_lookup[connection.destination]
-                if not destination.name in connection_path.city_lookup and not builder in destination.sites:
+                if not connection_path.walked(destination):
                     connection_path.add(destination,connection.cost)
-                    build_cost = connection_path.tip_cost(step,builder)
-                    if build_cost != None and (wallet == None or wallet >= build_cost) :
-                        results += self.walk_connections(wallet,builder,direction,max_distance,step,deepcopy(connection_path))
+                    results += self.walk_connections(wallet,builder,direction,step,deepcopy(connection_path))
             dir_check -= 1
         return sorted([yy for yy in results if yy != None],key=lambda xx: xx.tip_cost(step,builder))
 
     def first_automa_city(self,direction:str,builder:str):
         # TODO Have the automa handle per-region starting cities
+        city_names = list(self.city_lookup.keys())
+        random.shuffle(city_names)
         while True:
-            random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
+            random_city = self.city_lookup[city_names.pop()]
             if len(random_city.sites) == 0:
                 build_cost = random_city.build_cost(1,builder)
                 return random_city,build_cost
 
     def next_automa_city(self,direction:str,build_target:City,step:int,builder:str):
-        connection_paths = self.walk_connections(None,builder,direction,self.max_connections,step,ConnectionPath(build_target))
+        connection_paths = self.walk_connections(None,builder,direction,step,ConnectionPath(build_target))
         if len(connection_paths) == 0:
             return None,None
         build_cost = connection_paths[0].tip().build_cost(step,builder)
@@ -179,13 +203,15 @@ class GameMap:
         return self.city_lookup[connection_paths[0].tip().name],build_cost
 
     def first_human_city(self):
+        city_names = list(self.city_lookup.keys())
+        random.shuffle(city_names)
         while True:
-            random_city = self.city_lookup[random.choice(list(self.city_lookup.keys()))]
+            random_city = self.city_lookup[city_names.pop()]
             if len(random_city.sites) == 0:
                 return random_city,10
 
-    def next_human_city(self,wallet,direction,human_target,step,ignore_cities:list):
-        connection_paths = self.walk_connections(wallet,'Human',direction,self.max_connections,step,ConnectionPath(human_target),ignore_cities)
+    def next_human_city(self,wallet,direction,human_target,step):
+        connection_paths = self.walk_connections(wallet,'Human',direction,step,ConnectionPath(human_target))
         if len(connection_paths) == 0:
             return None,None
         build_cost = connection_paths[0].tip_cost(step,'Human')
