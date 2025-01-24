@@ -52,6 +52,7 @@ united_states_of_america = {
         [6,'new york',3],
         [6,'boston',1]
     ],
+    'region_ids':[1,2,3,4,5,6],
     'region_connections': [
         [1,2],
         [1,3],

@@ -89,7 +89,7 @@ class GameMap:
     def __init__(self,definition:dict,player_count):
         self.definition = definition
         # Short circuit recursive search for open spaces to build
-        self.max_connections = 7
+        self.max_connections = 21
 
         self.player_info = self.definition['player_count_info'][player_count-2]
         self.resource_market = model.ResourceMarket(self.definition['start_resources'],self.player_info[-1])
@@ -100,15 +100,16 @@ class GameMap:
         self.end_game_city_count = self.player_info[4]
 
         cities_to_ingest = []
+        region = random.choice(self.definition['region_ids'])
         if self.regions_used < 6:
             regions = []
-            region = random.choice(random.choice(self.definition['region_connections']))
             debug.game(f"Building region chain starting at region {region}")
             while len(regions) < self.regions_used:
-                for city in self.definition['cities']:
-                    if city[0] == region:
-                        cities_to_ingest.append(city)
-                regions.append(region)
+                if not region in regions:
+                    for city in self.definition['cities']:
+                        if city[0] == region:
+                            cities_to_ingest.append(city)
+                    regions.append(region)
                 for region_connection in self.definition['region_connections']:
                     if region_connection[0] == region and not region_connection[1] in regions:
                         region = region_connection[1]

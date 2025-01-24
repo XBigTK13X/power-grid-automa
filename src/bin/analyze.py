@@ -72,19 +72,6 @@ def analyze_automa():
             if not hit in hits:
                 hits[hit] = 0
             hits[hit] += 1
-
-    #import pprint
-    #pprint.pprint(hits,width=2)
-
-    #print("Build distribution")
-    #hits = {}
-    #for manual_build in automa_card_info.manual_builds:
-    #    for hit in manual_build:
-    #        if not hit in hits:
-    #            hits[hit] = 0
-    #        hits[hit] += 1
-    #import pprint
-    #pprint.pprint(hits,width=2)
     print(f"The game ends when someone scores 17 points")
     print(f"Automa 1 will take at least {high_build_1_turns} turns and at most {low_build_1_turns}")
     print(f"Automa 2 will take at least {high_build_2_turns} turns and at most {low_build_2_turns}")

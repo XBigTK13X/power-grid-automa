@@ -91,7 +91,7 @@ class SimulatedGame:
                     debug.sim(f"Human bought plant {next_plant.cost} for ${next_plant.cost + ante}")
                     debug.sim(f"Human plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
                     if self.plant_market.refill():
-                        step = 3
+                        self.step = 3
                 else:
                     debug.sim("The human did not purchase a plant")
                     self.plant_market.replace(next_plant)
@@ -110,7 +110,7 @@ class SimulatedGame:
                     debug.sim(f"Human purchased plant powers {next_plant.power_output} city for {next_plant.resource_amount} {next_plant.resource_kind}")
                     human_purchased = True
                 if self.plant_market.refill():
-                    step = 3
+                    self.step = 3
 
     def phase_3_purchase_resources(self):
         debug.sim("\n - Phase 3 - Purchase Resources")
@@ -204,8 +204,6 @@ class SimulatedGame:
         debug.sim(f"Automa left score {self.automa_left_cities_built}")
         debug.sim(f"Automa right score {self.automa_right_cities_built}")
         debug.sim(f"Human score {self.human_cities_built} cities and power {self.human.power_capacity()}")
-        #import pprint
-        #pprint.pprint(resource_purchase_tracker)
         debug.sim(f'Left automa built {self.automa_left_cities_built} , right automa built {self.automa_right_cities_built}, and human built {self.human_cities_built}')
         result = model.GameResult()
         result.turns_taken = self.turn_count

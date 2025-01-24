@@ -8,15 +8,21 @@ class PlantCard:
         self.power_output = definition[3]
         self.is_step_3 = definition[2] == 'step3'
 
+    def __repr__(self):
+        return f'{self.cost} - {self.is_step_3}'
+
+    def __str__(self):
+        return self.__repr__()
+
 class PlantMarket:
     def __init__(self,card_infos):
         self.cards = [PlantCard(xx) for xx in card_infos]
         self.market = []
         for ii in range(0,8):
             self.market.append(self.cards.pop(0))
-        self.step_3 = self.cards.pop()
+        self.step_3_card = self.cards.pop()
         random.shuffle(self.cards)
-        self.cards.append(self.step_3)
+        self.cards.append(self.step_3_card)
 
     def is_empty(self):
         return len(self.market) <= 0

@@ -52,6 +52,7 @@ germany = {
         [6,'munchen',3],
         [6,'passau',2]
     ],
+    'region_ids': [1,2,3,4,5,6],
     'region_connections': [
         [1,2],
         [1,3],
