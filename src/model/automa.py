@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 
 import src.debug as debug
 
@@ -6,29 +7,32 @@ LEFT_SIDE = 0
 RIGHT_SIDE = 1
 
 class AutomaCardHalf:
-    def __init__(self,build_direction,build_amount,plant,ante):
-        self.build_direction = build_direction
-        self.build_amount = build_amount
+    def __init__(self,plant,ante,resource_amount,build_direction,build_amount,):
         self.market_choice = plant
         self.market_ante = ante
+
+        self.resource_amount = resource_amount
+
+        self.build_direction = build_direction
+        self.build_amount = build_amount
 
 class AutomaCard:
     def __init__(self,definition):
         self.definition = definition
         self.left_half = AutomaCardHalf(
+            definition['market1'],
+            definition['ante1'],
+            definition['resource1'],
             definition['compass_direction_1'],
             definition['build1'],
-            definition['market1'],
-            definition['ante1']
         )
         self.right_half = AutomaCardHalf(
+            definition['market2'],
+            definition['ante2'],
+            definition['resource2'],
             definition['compass_direction_2'],
             definition['build2'],
-            definition['market2'],
-            definition['ante2']
         )
-
-        # TODO Actually use the resource skip when indicated
 
 class AutomaPlayer:
     def __init__(self,name):
@@ -158,8 +162,18 @@ class Automa:
         return highest_ante
 
     def get_resource_purchase_plants(self,side):
+        second_card = self.phase_cards[1]
         player = self.left_player if side == LEFT_SIDE else self.right_player
-        return player.plant_stack
+        active_half = second_card.left_half if side == LEFT_SIDE else second_card.right_half
+        if active_half.resource_amount == 0:
+            return []
+        if active_half.resource_amount == 1:
+            return player.plant_stack
+        if active_half.resource_amount == 2:
+            stack = deepcopy(player.plant_stack)
+            stack[0].resource_amount *= 2
+            return stack
+        return []
 
     def get_build_score(self):
         return self.phase_cards[2].score

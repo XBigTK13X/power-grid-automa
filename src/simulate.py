@@ -1,6 +1,7 @@
 import src.debug as debug
 import src.model as model
 import src.plant_deck as plant_deck
+from statistics import mean
 
 class SimulatedGame:
     def __init__(self,player_count,map,cards):
@@ -128,12 +129,8 @@ class SimulatedGame:
             else:
                 automa_side = model.LEFT_SIDE if action_index == self.automa_left_player_order else model.RIGHT_SIDE
                 automa_name = 'AutomaLeft' if automa_side == model.LEFT_SIDE else 'AutomaRight'
-                is_first = True
                 for active_plant in self.automa.get_resource_purchase_plants(automa_side):
                     resource_amount = active_plant.resource_amount
-                    if is_first:
-                        resource_amount *= 2
-                        is_first = False
                     if active_plant.resource_kind != 'wind':
                         if active_plant.resource_kind == 'oil/coal':
                             start_amounts = self.game_map.resource_market.amounts()
@@ -249,13 +246,15 @@ def play_games(cards, amount, map, player_count):
             tallies[1]+=1
     percent = 100.0*(tallies[1]/(tallies[1]+tallies[0]))
     debug.result(f"The automa won {percent:02}% [{tallies[1]}] games and the human won {100-percent:02}% [{tallies[0]}] games")
-    average_turns = sum([x.turns_taken for x in results])/len(results)
-    min_turns = min([x.turns_taken for x in results])
-    max_turns = max([x.turns_taken for x in results])
-    debug.result(f'On average, the game was over after [{average_turns}] turns. Shortest was {min_turns} turns. Longest was {max_turns} turns')
-    debug.result(f'Win stats automa-city[{sum([x.automa_city_win for x in results])/len(results)}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
-    debug.result(f'Tiebreaker stats automa[{sum([x.automa_tiebreaker_win for x in results])/len(results)}] human[{sum([x.human_tiebreaker_win for x in results])/len(results)}]')
-    debug.result(f'Human money at end game averaged [{sum([x.human_money for x in results])/len(results)}] with a min [{min([x.human_money for x in results])}] and max [{max([x.human_money for x in results])}]')
+    debug.result(f'On average, the game was over after [{mean([x.turns_taken for x in results])}] turns. Shortest was {min([x.turns_taken for x in results])} turns. Longest was {max([x.turns_taken for x in results])} turns')
+    debug.result(f'Win stats automa-city[{mean([x.automa_city_win for x in results])}] human-city[{sum([x.human_city_win for x in results])/len(results)}]')
+    debug.result(f'Tiebreaker stats automa[{mean([x.automa_tiebreaker_win for x in results])}] human[{mean([x.human_tiebreaker_win for x in results])}]')
+    debug.result(f'Human money at end game averaged [{mean([x.human_money for x in results])}] with a min [{min([x.human_money for x in results])}] and max [{max([x.human_money for x in results])}]')
+    coal_average = mean([xx.resource_market.rows[0].quantity for xx in results])
+    oil_average = mean([xx.resource_market.rows[1].quantity for xx in results])
+    trash_average = mean([xx.resource_market.rows[2].quantity for xx in results])
+    nuke_average = mean([xx.resource_market.rows[3].quantity for xx in results])
+    debug.result(f'Ending average resources coal[{coal_average}] oil[{oil_average}] trash[{trash_average}] nuke[{nuke_average}]')
 
 def play_game(cards,map,player_count):
     game = SimulatedGame(player_count,map,cards)
