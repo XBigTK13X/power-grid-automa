@@ -2,6 +2,7 @@ import src.board as board
 import src.automa_card_info as automa_card_info
 import src.generate as generate
 import src.model as model
+import pprint
 
 def analyze_board(map):
     city_count = len(map['cities'])
@@ -32,8 +33,6 @@ def analyze_board(map):
             'step_2_city_count': info[3],
             'end_game_city_count': info[4]
         }
-
-    import pprint
     pprint.pprint({
         'map': map['name'],
         'cities': city_count,
@@ -49,29 +48,62 @@ def count_turns(build_index,deck):
     card_index = 0
     current_score = 0
     turns = 0
-    build_count = 0
     while current_score < end_game_score:
         card = deck[card_index % len(deck)]
-        current_score += card.city_build[build_index]
-        build_count += card.city_build[build_index]
+        current_score += card.left_half.build_amount if build_index == 0 else card.right_half.build_amount
         card_index += 1
         turns += 1
-    return turns,build_count
+    return turns,current_score
 
 def analyze_automa():
     cards = [model.AutomaCard(xx) for xx in generate.create_cards()]
-    low_build_1_turns,low_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.city_build[0]))
-    high_build_1_turns,high_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.city_build[0],reverse=True))
-    low_build_2_turns,low_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.city_build[1]))
-    high_build_2_turns,high_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.city_build[1],reverse=True))
+    low_build_1_turns,low_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.left_half.build_amount))
+    high_build_1_turns,high_build_1_count = count_turns(0,sorted(cards,key=lambda xx:xx.left_half.build_amount,reverse=True))
+    low_build_2_turns,low_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.right_half.build_amount))
+    high_build_2_turns,high_build_2_count = count_turns(1,sorted(cards,key=lambda xx:xx.right_half.build_amount,reverse=True))
 
-    #print("Market distribution")
-    hits = {}
+    print("Plant market pick distribution")
+    hits = {'left':{},'right':{}}
     for market in automa_card_info.manual_plant_choices:
-        for hit in market:
-            if not hit in hits:
-                hits[hit] = 0
-            hits[hit] += 1
+        left_hit = market[0]
+        if not left_hit in hits['left']:
+            hits['left'][left_hit] = 0
+        hits['left'][left_hit] += 1
+
+        right_hit = market[1]
+        if not right_hit in hits['right']:
+            hits['right'][right_hit] = 0
+        hits['right'][right_hit] += 1
+    pprint.pprint(hits,indent=2,width=2)
+
+    print("Ante distribution")
+    hits = {'left':{},'right':{}}
+    for ante in automa_card_info.manual_antes:
+        left_hit = ante[0]
+        if not left_hit in hits['left']:
+            hits['left'][left_hit] = 0
+        hits['left'][left_hit] += 1
+
+        right_hit = ante[1]
+        if not right_hit in hits['right']:
+            hits['right'][right_hit] = 0
+        hits['right'][right_hit] += 1
+    pprint.pprint(hits,indent=2,width=2)
+
+    print("Resource mult distribution")
+    hits = {'left':{},'right':{}}
+    for resource in automa_card_info.manual_resources:
+        left_hit = resource[0]
+        if not left_hit in hits['left']:
+            hits['left'][left_hit] = 0
+        hits['left'][left_hit] += 1
+
+        right_hit = resource[1]
+        if not right_hit in hits['right']:
+            hits['right'][right_hit] = 0
+        hits['right'][right_hit] += 1
+    pprint.pprint(hits,indent=2,width=2)
+
     print(f"The game ends when someone scores 17 points")
     print(f"Automa 1 will take at least {high_build_1_turns} turns and at most {low_build_1_turns}")
     print(f"Automa 2 will take at least {high_build_2_turns} turns and at most {low_build_2_turns}")

@@ -53,3 +53,5 @@ def write_cards_to_csv(cards):
         writer = csv.DictWriter(write_handle,headers)
         writer.writeheader()
         writer.writerows(cards)
+        # Sometimes nandeck freaks out and needs an extra line or else the last card is ignored
+        writer.writerow({'id':'nandeck'})
