@@ -29,7 +29,7 @@ IF=[market2]<>-1
     IMAGE=[fronts],JOIN([base],"art\electro.png"),65.5%+[ante_off],[elektro_y],[elektro_size],[elektro_size],,P
     TEXT=[fronts],[ante1],75%+[ante_off],[ante_y],15%,15%,center,center
 ELSE
-    IMAGE=[fronts],JOIN([base],"art\plant-pass.png"),58%,8%,[icon_lg],[icon_lg],,P
+    IMAGE=[fronts],JOIN([base],"art\plant-pass.png"),62.5%,8%,[icon_lg],[icon_lg],,P
 ENDIF
 
 ; Phase 3 - Resources
