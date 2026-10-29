@@ -1,11 +1,13 @@
 import src.debug as debug
+
 debug.DEBUG_SIM = True
 debug.DEBUG_GAME = True
 debug.DEBUG_RESULT = True
 debug.LOG_FILES = True
-GAMES_TO_SIMULATE = 1
+GAMES_TO_SIMULATE = 1000
 PLAYER_COUNT = 3
 import src.board
+
 MAP = src.board.united_states_of_america
 
 import src.generate as generate
