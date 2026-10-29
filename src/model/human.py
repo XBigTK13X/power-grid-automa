@@ -47,153 +47,211 @@ class Human:
         debug.game("  plants")
         debug.game(
             [
-                f"  #{x.cost} - {x.resource_kind} x {x.resource_amount} => {x.power_output}"
-                for x in self.plants
+                f"  #{xx.cost} - {xx.resource_kind} x {xx.resource_amount} => {xx.power_output}"
+                for xx in self.plants
             ]
         )
         debug.game(f"  cities {len(self.city_names)}")
         debug.game(f"  {self.city_names}")
 
-    def purchase_plant(self, plant_market, new_plant, ante, can_ignore=True):
+    def wants_plant(self, new_plant, ante, can_ignore=True):
+        total_cost = new_plant.cost + ante
+        if self.money < total_cost:
+            return False
+
         if not can_ignore:
-            self.money -= new_plant.cost + ante
-            self.plants.append(new_plant)
             return True
-        if self.money < new_plant.cost + ante:
-            return False
-        if self.power_capacity() > self.houses:
-            return False
-        if self.power_capacity() >= 15:
-            return False
-        for plant in self.plants:
-            if plant.power_output < new_plant.power_output or len(self.plants) < 3:
-                self.money -= new_plant.cost + ante
-                self.plants.append(new_plant)
-                self.plants = sorted(self.plants, key=lambda xx: xx.cost)
-                if len(self.plants) > 3:
-                    self.plants.pop(0)
+
+        if len(self.plants) < 3:
+            if self.houses == 0:
+                return (self.money - total_cost) >= 20
+            return (self.money - total_cost) >= 10
+
+        worst_plant = min(
+            self.plants, key=lambda xx: (xx.power_output, -xx.resource_amount)
+        )
+        if new_plant.power_output > worst_plant.power_output:
+            if self.power_capacity() < CITY_WIN_COUNT:
                 return True
+            if new_plant.power_output >= 5 and worst_plant.power_output <= 3:
+                return True
+
         return False
 
+    def purchase_plant(self, plant_market, new_plant, ante, can_ignore=True):
+        total_cost = new_plant.cost + ante
+        if not can_ignore:
+            self.money -= total_cost
+            self.plants.append(new_plant)
+            self.plants = sorted(self.plants, key=lambda xx: xx.cost)
+            if len(self.plants) > 3:
+                self.plants.pop(0)
+            return True
+
+        if not self.wants_plant(new_plant, ante, can_ignore):
+            return False
+
+        self.money -= total_cost
+        if len(self.plants) >= 3:
+            worst_plant = min(
+                self.plants, key=lambda xx: (xx.power_output, -xx.resource_amount)
+            )
+            self.plants.remove(worst_plant)
+        self.plants.append(new_plant)
+        self.plants = sorted(self.plants, key=lambda xx: xx.cost)
+        return True
+
+    def choose_plant_to_auction(self, plant_market, ante):
+        market_plants = plant_market.get_actual_market()
+        candidates = []
+        for plant in market_plants:
+            if self.wants_plant(plant, ante, can_ignore=True):
+                candidates.append(plant)
+
+        if not candidates:
+            return None
+
+        candidates.sort(key=lambda xx: (xx.power_output, -xx.cost), reverse=True)
+        return candidates[0]
+
     def get_highest_plant(self):
-        return self.plants[-1]
+        return self.plants[-1] if self.plants else None
 
     def purchase_resources(self, resource_market):
         balance = deepcopy(self.resources)
+        target_power = min(self.power_capacity(), max(self.houses + 3, 2))
         houses_served = 0
-        orders = []
-        self.plants.reverse()
         resource_order = []
-        for plant in self.plants:
+
+        reversed_plants = sorted(
+            self.plants,
+            key=lambda xx: xx.power_output / max(xx.resource_amount, 1),
+            reverse=True,
+        )
+        for plant in reversed_plants:
             if plant.resource_kind == "wind":
                 houses_served += plant.power_output
                 continue
-            if houses_served >= self.houses and self.houses > 0:
+            if houses_served >= target_power:
                 break
-            # TODO Handle oil/coal properly
             resource_to_claim = plant.resource_kind
             if plant.resource_kind == "oil/coal":
-                resource_to_claim = random.choice(["oil", "coal"])
+                resource_to_claim = (
+                    "coal" if balance["coal"] >= balance["oil"] else "oil"
+                )
             balance[resource_to_claim] -= plant.resource_amount
             houses_served += plant.power_output
             if (
-                not resource_to_claim in resource_order
+                resource_to_claim not in resource_order
                 and balance[resource_to_claim] < 0
             ):
                 resource_order.append(resource_to_claim)
-        self.plants.reverse()
+
         filled_orders = []
         for order in resource_order:
             if balance[order] < 0:
-                debug.game(
-                    f"Wallet has ${self.money}. Requesting {-balance[order]} {order}"
-                )
-                cost, amount = resource_market.cost_to_buy(order, -balance[order])
-                if cost <= self.money:
+                needed = -balance[order]
+                debug.game(f"Wallet has ${self.money}. Requesting {needed} {order}")
+                cost, available = resource_market.cost_to_buy(order, needed)
+                qty_to_buy = available
+                while qty_to_buy > 0 and cost > self.money:
+                    qty_to_buy -= 1
+                    cost, _ = resource_market.cost_to_buy(order, qty_to_buy)
+
+                if qty_to_buy > 0 and cost <= self.money:
                     purchased, post_money, taken = resource_market.purchase(
-                        order, -balance[order], self.money
+                        order, qty_to_buy, self.money
                     )
                     self.money = post_money
                     debug.game(f"Human bought {taken} {order}")
                     self.resources[order] += taken
                     filled_orders.append([order, taken, f"${cost}"])
                 else:
-                    debug.game(
-                        f"Human didn't have enough money for {-balance[order]} {order}"
-                    )
+                    debug.game(f"Human didn't have enough money for {needed} {order}")
         return filled_orders
 
     def build_houses(self, game_map, step):
+        built = 0
+        total_spent = 0
+
         if self.houses == 0:
-            destination, money = game_map.first_human_city()
+            destination, initial_cost = game_map.first_human_city()
+            if destination is None or self.money < initial_cost:
+                return 0, 0
             debug.sim(f"Human built first house in {destination.name}")
             destination.build_house(1, "Human")
             self.cities.append(destination)
             self.city_names.append(destination.name)
+            self.money -= initial_cost
             self.houses += 1
-            return 1, 10
-        else:
-            can_afford = True
-            built = 0
-            total_cost = 0
-            while can_afford and self.houses < CITY_WIN_COUNT:
-                destination = random.choice(self.cities)
-                direction = model.random_direction()
-                target, city_with_connection_cost = game_map.next_human_city(
-                    self.money, direction, destination, step
-                )
-                if target == None:
+            built += 1
+            total_spent += initial_cost
+
+        reserve = 0 if (self.houses >= 12 or self.power_capacity() >= 14) else 10
+
+        while self.houses < CITY_WIN_COUNT:
+            if self.houses >= self.power_capacity() + 1 and self.houses < 14:
+                break
+
+            target, connection_cost = game_map.next_human_city_from_network(
+                self.money, self.city_names, step
+            )
+            if target is None:
+                debug.game(f"Human could not afford another city with ${self.money}")
+                break
+
+            if (
+                connection_cost + reserve <= self.money
+                or self.houses + 1 >= CITY_WIN_COUNT
+            ):
+                if connection_cost <= self.money:
                     debug.game(
-                        f"Human could not afford another city with ${self.money}"
-                    )
-                    break
-                if city_with_connection_cost < self.money:
-                    debug.game(
-                        f"Human building in {target.name} for ${city_with_connection_cost}"
+                        f"Human building in {target.name} for ${connection_cost}"
                     )
                     target.build_house(step, "Human")
                     self.cities.append(target)
                     self.city_names.append(target.name)
                     self.houses += 1
-                    self.money -= city_with_connection_cost
-                    total_cost += city_with_connection_cost
+                    self.money -= connection_cost
+                    total_spent += connection_cost
                     built += 1
                 else:
-                    can_afford = False
-            if built == 0:
-                if self.houses >= CITY_WIN_COUNT:
-                    debug.game(f"Human does not need to build any more houses")
-                else:
-                    debug.game(f"Human cannot afford to build this turn")
-            return built, total_cost
+                    break
+            else:
+                break
+
+        if built == 0:
+            if self.houses >= CITY_WIN_COUNT:
+                debug.game(f"Human does not need to build any more houses")
+            else:
+                debug.game(f"Human cannot afford to build this turn")
+
+        return built, total_spent
 
     def power_cities(self):
         max_powered = self.houses
         powered = 0
-        power_plants = sorted(self.plants, key=lambda xx: xx.power_output)
-        power_plants.reverse()
+        power_plants = sorted(self.plants, key=lambda xx: xx.power_output, reverse=True)
         for plant in power_plants:
             if plant.resource_kind == "wind":
                 powered += plant.power_output
                 continue
             if powered < max_powered:
-                # TODO properly handle oil/coal
                 resource_kind = plant.resource_kind
                 if plant.resource_kind == "oil/coal":
                     resource_kind = (
-                        "oil"
-                        if self.resources["oil"] > self.resources["coal"]
-                        else "coal"
+                        "coal"
+                        if self.resources["coal"] >= self.resources["oil"]
+                        else "oil"
                     )
                 if self.resources[resource_kind] >= plant.resource_amount:
                     self.resources[resource_kind] -= plant.resource_amount
                     powered += plant.power_output
-        if powered > max_powered:
-            powered = max_powered
-        debug.game(
-            f"Human powered {powered} cities and made {power_payouts[powered]} money"
-        )
-        self.money += power_payouts[powered]
+        powered = min(powered, max_powered)
+        payout = power_payouts[powered]
+        debug.game(f"Human powered {powered} cities and made {payout} money")
+        self.money += payout
+        return powered, payout
 
     def power_capacity(self):
-        return sum(x.power_output for x in self.plants)
+        return sum(xx.power_output for xx in self.plants)

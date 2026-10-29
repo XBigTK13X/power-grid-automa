@@ -28,16 +28,20 @@ class GameResult:
             if self.left_cities_built >= self.right_cities_built
             else "RightAutoma"
         )
-        competing_score = (
-            self.left_cities_built
+        competing_score = max(self.left_cities_built, self.right_cities_built)
+        competing_tiebreaker = (
+            self.left_plants[0][0]
             if self.left_cities_built >= self.right_cities_built
-            else self.right_cities_built
+            and self.left_plants
+            and self.left_plants[0]
+            else (
+                self.right_plants[0][0]
+                if self.right_plants and self.right_plants[0]
+                else 0
+            )
         )
-        # TODO Actually calculate how many plants will fire, not just capacity
-        if self.human_score > self.human_power_capacity:
-            self.human_score = self.human_power_capacity
-        else:
-            self.human_score = self.human_cities_built
+        self.human_score = min(self.human_cities_built, self.human_power_capacity)
+
         if competing_score > self.human_score:
             debug.sim(f"{competing_automa} wins")
             self.automa_city_win = True
@@ -46,21 +50,16 @@ class GameResult:
             debug.sim("Human wins")
             self.human_city_win = True
             return True
-        if competing_score == self.human_score:
-            if self.human_power_capacity < self.human_score:
-                debug.sim(f"{competing_automa} wins")
-                self.automa_tiebreaker_win = True
-                return False
-            else:
-                if self.human_money <= self.automa_tiebreaker:
-                    debug.sim(
-                        f"Automa wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker}"
-                    )
-                    self.automa_tiebreaker_win = True
-                    return False
-                else:
-                    debug.sim(
-                        f"Human wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker}"
-                    )
-                    self.human_tiebreaker_win = True
-                    return True
+
+        if self.human_money > competing_tiebreaker:
+            debug.sim(
+                f"Human wins with tiebreaker. Human money ${self.human_money} to {competing_tiebreaker}"
+            )
+            self.human_tiebreaker_win = True
+            return True
+        else:
+            debug.sim(
+                f"Automa wins with tiebreaker. Human money ${self.human_money} to {competing_tiebreaker}"
+            )
+            self.automa_tiebreaker_win = True
+            return False

@@ -17,14 +17,29 @@ class PlantCard:
 
 
 class PlantMarket:
-    def __init__(self, card_infos):
-        self.cards = [PlantCard(xx) for xx in card_infos]
+    def __init__(self, card_infos, plants_to_remove=8):
+        all_cards = [PlantCard(xx) for xx in card_infos]
         self.market = []
-        for ii in range(0, 8):
-            self.market.append(self.cards.pop(0))
-        self.step_3_card = self.cards.pop()
-        random.shuffle(self.cards)
-        self.cards.append(self.step_3_card)
+        for _ in range(8):
+            self.market.append(all_cards.pop(0))
+
+        step_3_card = all_cards.pop()
+        plant_thirteen = None
+        remaining_pool = []
+        for card in all_cards:
+            if card.cost == 13 and plant_thirteen is None:
+                plant_thirteen = card
+            else:
+                remaining_pool.append(card)
+
+        random.shuffle(remaining_pool)
+        for _ in range(plants_to_remove):
+            if remaining_pool:
+                remaining_pool.pop()
+
+        self.cards = [plant_thirteen] if plant_thirteen else []
+        self.cards.extend(remaining_pool)
+        self.cards.append(step_3_card)
 
     def is_empty(self):
         return len(self.market) <= 0
@@ -35,18 +50,22 @@ class PlantMarket:
         return plant
 
     def refill(self):
-        if len(self.market) < 8 and len(self.cards) > 0:
+        if len(self.cards) > 0:
             next_card = self.cards.pop(0)
             if not next_card.is_step_3:
                 self.market.append(next_card)
                 self.market = sorted(self.market, key=lambda xx: xx.cost)
-            return next_card.is_step_3
-        False
+                return False
+            return True
+        return False
 
     def random(self):
-        ii = random.randint(0, len(self.market) - 1)
-        plant = self.market[ii]
-        del self.market[ii]
+        valid_range = min(len(self.market), 4)
+        if valid_range == 0:
+            return None
+        choice_idx = random.randint(0, valid_range - 1)
+        plant = self.market[choice_idx]
+        del self.market[choice_idx]
         return plant
 
     def replace(self, plant):
@@ -62,7 +81,12 @@ class PlantMarket:
 
     def remove_lowest(self):
         if len(self.market) > 0:
-            self.market.pop(0)
+            return self.market.pop(0)
+        return None
 
     def has_plant(self, index):
         return len(self.market) > index
+
+    def get_actual_market(self):
+        limit = min(len(self.market), 4)
+        return list(self.market[:limit])

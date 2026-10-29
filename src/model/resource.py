@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import src.debug as debug
 
 
@@ -14,85 +12,54 @@ class ResourceRow:
             self.refill_amounts[2],
         ]
         self.kind = kind
-        self.bins = []
-        for ii in range(0, bins):
-            self.bins.append(0)
-        self.index = bins - 1
-        self.bin_size = per_bin
-        self.quantity = 0
-        self.quantity_max = 12 if kind == "nuke" else 24
         self.bin_count = bins
-        filling = True
-        while self.costs[self.index] >= self.first_fill_amount and filling:
-            self.bins[self.index] = self.bin_size
-            self.quantity += 1 if kind == "nuke" else 3
-            if not self.next_cheaper_bin_index():
-                filling = False
+        self.bin_size = per_bin
+        self.quantity_max = 12 if kind == "nuke" else 24
+        self.bins = [0 for _ in range(self.bin_count)]
+        self.quantity = 0
 
-    def next_cheaper_bin_index(self):
-        if self.index > 0:
-            self.index -= 1
-            return True
-        if self.index <= 0:
-            self.index = 0
-            return False
-
-    def next_expensive_bin_index(self):
-        if self.index < len(self.bins) - 1:
-            self.index += 1
-            return True
-        if self.index >= len(self.bins):
-            self.index = len(self.bins) - 1
-            return False
+        for idx in range(self.bin_count):
+            if self.costs[idx] >= self.first_fill_amount:
+                fill_qty = 1 if kind == "nuke" else self.bin_size
+                self.bins[idx] = fill_qty
+                self.quantity += fill_qty
 
     def take_one(self, money):
-        if self.bins[self.index] == 0:
-            if self.next_expensive_bin_index():
-                if money >= self.costs[self.index]:
-                    self.bins[self.index] -= 1
-                    money -= self.costs[self.index]
+        for idx in range(self.bin_count):
+            if self.bins[idx] > 0:
+                cost = self.costs[idx]
+                if money >= cost:
+                    self.bins[idx] -= 1
                     self.quantity -= 1
-                    return True, money
-                else:
-                    return False, money
-            else:
+                    return True, money - cost
                 return False, money
-        else:
-            if money >= self.costs[self.index]:
-                self.bins[self.index] -= 1
-                money -= self.costs[self.index]
-                self.quantity -= 1
-                return True, money
-            else:
-                return False, money
+        return False, money
 
     def put_one(self):
-        if self.bins[self.index] >= self.bin_size:
-            self.bins[self.index] = self.bin_size
-            if self.next_cheaper_bin_index():
-                self.bins[self.index] += 1
+        if self.quantity >= self.quantity_max:
+            return False
+        for idx in range(self.bin_count - 1, -1, -1):
+            if self.bins[idx] < self.bin_size:
+                self.bins[idx] += 1
                 self.quantity += 1
                 return True
-            else:
-                return False
-        else:
-            self.bins[self.index] += 1
-            self.quantity += 1
-            return True
+        return False
 
     def refill_phase(self, step_index):
         refill_rate = self.refill_rates[step_index]
-        if refill_rate <= 0:
-            return 0
-        amount = 0
-        for ii in range(0, refill_rate):
-            if self.quantity < self.quantity_max:
-                amount += 1
-                self.put_one()
-        return amount
+        added = 0
+        for _ in range(refill_rate):
+            if self.put_one():
+                added += 1
+            else:
+                break
+        return added
 
     def current_cost(self):
-        return self.costs[self.index]
+        for idx in range(self.bin_count):
+            if self.bins[idx] > 0:
+                return self.costs[idx]
+        return float("inf")
 
     def debug(self):
         debug.game(f"{self.bins}<-{self.kind} ({self.quantity})")
@@ -151,16 +118,15 @@ class ResourceMarket:
         ]
 
     def purchase(self, kind, amount, money):
-        resource_row = None
         if kind == "wind":
-            return True, money
+            return True, money, 0
         purchased = True
         taken = 0
         while purchased and taken < amount:
             if kind == "oil/coal":
                 resource_row = (
                     self.rows[0]
-                    if self.rows[0].current_cost() < self.rows[1].current_cost()
+                    if self.rows[0].current_cost() <= self.rows[1].current_cost()
                     else self.rows[1]
                 )
             else:
@@ -172,28 +138,23 @@ class ResourceMarket:
 
     def refill_phase(self, step):
         amounts = {}
+        step_idx = min(max(step - 1, 0), 2)
         for row in self.rows:
-            amounts[row.kind] = row.refill_phase(step - 1)
+            amounts[row.kind] = row.refill_phase(step_idx)
         return amounts
 
     def cost_to_buy(self, kind, amount):
         row = self.rows[self.kinds[kind]]
         accumulated_cost = 0
-        remaining_amount = amount
-        current_index = row.index
-        available_in_bin = row.bins[current_index]
-
-        while remaining_amount > 0 and current_index < len(row.bins):
-            take_count = min(remaining_amount, available_in_bin)
-            accumulated_cost += take_count * row.costs[current_index]
-            remaining_amount -= take_count
-
-            if remaining_amount > 0:
-                current_index += 1
-                if current_index < len(row.bins):
-                    available_in_bin = row.bins[current_index]
-
-        return accumulated_cost, amount - remaining_amount
+        needed = amount
+        for idx in range(row.bin_count):
+            available = row.bins[idx]
+            take_count = min(needed, available)
+            accumulated_cost += take_count * row.costs[idx]
+            needed -= take_count
+            if needed == 0:
+                break
+        return accumulated_cost, amount - needed
 
     def amounts(self):
         return [
