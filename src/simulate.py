@@ -1,14 +1,16 @@
+import sys
+from statistics import mean, median
+
 import src.debug as debug
 import src.model as model
 import src.plant_deck as plant_deck
-from statistics import mean
 
 
 class SimulatedGame:
-    def __init__(self, player_count, map, cards):
+    def __init__(self, player_count, map_data, cards):
         debug.sim("Setting up a new game")
         self.player_count = player_count
-        self.game_map = model.GameMap(map, player_count)
+        self.game_map = model.GameMap(map_data, player_count)
         self.plant_market = model.PlantMarket(plant_deck.base_game_plants)
         self.automa = model.Automa(cards)
         self.human = model.Human()
@@ -51,7 +53,6 @@ class SimulatedGame:
 
             self.automa.draw_cards()
             if self.first_turn:
-                # Both automa players MUST claim a plant during the first turn of the game
                 while self.automa.has_market_skips():
                     self.automa.draw_cards()
 
@@ -305,7 +306,7 @@ class SimulatedGame:
         result.human_power_capacity = self.human.power_capacity()
         result.human_cities_built = self.human_cities_built
         result.left_cities_built = self.automa_left_cities_built
-        result.right_cities_built = self.automa_left_cities_built
+        result.right_cities_built = self.automa_right_cities_built
 
         result.automa_tiebreaker = self.automa.tiebreaker()
 
@@ -325,46 +326,170 @@ class SimulatedGame:
         return result
 
 
-def play_games(cards, amount, map, player_count):
-    print(f"Simulating {amount} games of Power Grid")
-    tallies = [0, 0]
-    results = []
-    for ii in range(0, amount):
-        if ii % 100 == 0:
-            print(f"Simulating game {ii + 1}/{amount}")
-        result = play_game(cards, map, player_count)
-        debug.flush(ii)
-        results.append(result)
-        if result.human_win:
-            tallies[0] += 1
-        else:
-            tallies[1] += 1
-    percent = 100.0 * (tallies[1] / (tallies[1] + tallies[0]))
-    debug.result(
-        f"The automa won {percent:02}% [{tallies[1]}] games and the human won {100 - percent:02}% [{tallies[0]}] games"
-    )
-    debug.result(
-        f"On average, the game was over after [{mean([x.turns_taken for x in results])}] turns. Shortest was {min([x.turns_taken for x in results])} turns. Longest was {max([x.turns_taken for x in results])} turns"
-    )
-    debug.result(
-        f"Win stats automa-city[{mean([x.automa_city_win for x in results])}] human-city[{sum([x.human_city_win for x in results]) / len(results)}]"
-    )
-    debug.result(
-        f"Tiebreaker stats automa[{mean([x.automa_tiebreaker_win for x in results])}] human[{mean([x.human_tiebreaker_win for x in results])}]"
-    )
-    debug.result(
-        f"Human money at end game averaged [{mean([x.human_money for x in results])}] with a min [{min([x.human_money for x in results])}] and max [{max([x.human_money for x in results])}]"
-    )
-    coal_average = mean([xx.resource_market.rows[0].quantity for xx in results])
-    oil_average = mean([xx.resource_market.rows[1].quantity for xx in results])
-    trash_average = mean([xx.resource_market.rows[2].quantity for xx in results])
-    nuke_average = mean([xx.resource_market.rows[3].quantity for xx in results])
-    debug.result(
-        f"Ending average resources coal[{coal_average}] oil[{oil_average}] trash[{trash_average}] nuke[{nuke_average}]"
-    )
-
-
-def play_game(cards, map, player_count):
-    game = SimulatedGame(player_count, map, cards)
+def play_game(cards, map_data, player_count):
+    game = SimulatedGame(player_count, map_data, cards)
     game.play()
     return game.document_result()
+
+
+def play_games(cards, amount, map_data, player_count):
+    tallies = {"human": 0, "automa_left": 0, "automa_right": 0}
+    results = []
+
+    metrics = {
+        "turns": [],
+        "human_money": [],
+        "human_cities": [],
+        "left_cities": [],
+        "right_cities": [],
+        "human_power_capacity": [],
+        "automa_city_wins": 0,
+        "human_city_wins": 0,
+        "automa_tiebreaker_wins": 0,
+        "human_tiebreaker_wins": 0,
+        "end_resources": [0, 0, 0, 0],
+        "consumed_resources": {
+            "coal": {"human": 0, "automa": 0},
+            "oil": {"human": 0, "automa": 0},
+            "trash": {"human": 0, "automa": 0},
+            "nuke": {"human": 0, "automa": 0},
+        },
+        "outliers": {
+            "long_games": [],
+            "short_games": [],
+            "unpowered_endgame": [],
+            "low_cash_human": [],
+            "tiebreakers": [],
+        },
+    }
+
+    for ii in range(0, amount):
+        if amount > 1:
+            sys.stdout.write(f"\rGame {ii + 1}/{amount}")
+            sys.stdout.flush()
+
+        game_result = play_game(cards, map_data, player_count)
+        debug.flush(ii)
+        results.append(game_result)
+
+        if game_result.human_win:
+            tallies["human"] += 1
+        elif game_result.left_cities_built >= game_result.right_cities_built:
+            tallies["automa_left"] += 1
+        else:
+            tallies["automa_right"] += 1
+
+        metrics["turns"].append(game_result.turns_taken)
+        metrics["human_money"].append(game_result.human_money)
+        metrics["human_cities"].append(game_result.human_cities_built)
+        metrics["left_cities"].append(game_result.left_cities_built)
+        metrics["right_cities"].append(game_result.right_cities_built)
+        metrics["human_power_capacity"].append(game_result.human_power_capacity)
+
+        if game_result.automa_city_win:
+            metrics["automa_city_wins"] += 1
+        if game_result.human_city_win:
+            metrics["human_city_wins"] += 1
+        if game_result.automa_tiebreaker_win:
+            metrics["automa_tiebreaker_wins"] += 1
+        if game_result.human_tiebreaker_win:
+            metrics["human_tiebreaker_wins"] += 1
+
+        if game_result.turns_taken >= 15:
+            metrics["outliers"]["long_games"].append(ii)
+        elif game_result.turns_taken <= 9:
+            metrics["outliers"]["short_games"].append(ii)
+
+        if game_result.human_power_capacity < game_result.human_cities_built:
+            metrics["outliers"]["unpowered_endgame"].append(ii)
+
+        if game_result.human_money <= 5:
+            metrics["outliers"]["low_cash_human"].append(ii)
+
+        if game_result.automa_tiebreaker_win or game_result.human_tiebreaker_win:
+            metrics["outliers"]["tiebreakers"].append(ii)
+
+        for row_index in range(0, 4):
+            metrics["end_resources"][row_index] += game_result.resource_market.rows[
+                row_index
+            ].quantity
+
+        if hasattr(game_result, "resource_purchase_tracker"):
+            for kind in ["coal", "oil", "trash", "nuke"]:
+                metrics["consumed_resources"][kind]["human"] += (
+                    game_result.resource_purchase_tracker[kind]["human"]
+                )
+                metrics["consumed_resources"][kind]["automa"] += (
+                    game_result.resource_purchase_tracker[kind]["automa"]
+                )
+
+    if amount > 1:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
+    automa_total_wins = tallies["automa_left"] + tallies["automa_right"]
+    automa_win_percent = 100.0 * (automa_total_wins / amount)
+    human_win_percent = 100.0 * (tallies["human"] / amount)
+    resource_averages = [quantity / amount for quantity in metrics["end_resources"]]
+
+    avg_consumed = {
+        kind: {
+            "human": metrics["consumed_resources"][kind]["human"] / amount,
+            "automa": metrics["consumed_resources"][kind]["automa"] / amount,
+        }
+        for kind in ["coal", "oil", "trash", "nuke"]
+    }
+
+    summary_lines = [
+        f"=== Power Grid Simulation Summary ({amount} Games) ===",
+        f"Map: {map_data['name']} | Players: {player_count}",
+        "",
+        "--- Win Rates ---",
+        f"Human Wins:        {human_win_percent:5.2f}% [{tallies['human']}]",
+        f"Automa Total Wins: {automa_win_percent:5.2f}% [{automa_total_wins}]",
+        f"  - Automa Left:   {100.0 * (tallies['automa_left'] / amount):5.2f}% [{tallies['automa_left']}]",
+        f"  - Automa Right:  {100.0 * (tallies['automa_right'] / amount):5.2f}% [{tallies['automa_right']}]",
+        f"City Trigger Wins: Human [{metrics['human_city_wins']}], Automa [{metrics['automa_city_wins']}]",
+        f"Tiebreaker Wins:   Human [{metrics['human_tiebreaker_wins']}], Automa [{metrics['automa_tiebreaker_wins']}]",
+        "",
+        "--- Game Length (Turns) ---",
+        f"Average: {mean(metrics['turns']):.2f}",
+        f"Median:  {median(metrics['turns'])}",
+        f"Min:     {min(metrics['turns'])}",
+        f"Max:     {max(metrics['turns'])}",
+        "",
+        "--- Cities Built at End Game ---",
+        f"Human:        avg={mean(metrics['human_cities']):.2f}, min={min(metrics['human_cities'])}, max={max(metrics['human_cities'])}",
+        f"Automa Left:  avg={mean(metrics['left_cities']):.2f}, min={min(metrics['left_cities'])}, max={max(metrics['left_cities'])}",
+        f"Automa Right: avg={mean(metrics['right_cities']):.2f}, min={min(metrics['right_cities'])}, max={max(metrics['right_cities'])}",
+        "",
+        "--- Human Economy ---",
+        f"Ending Money:          avg=${mean(metrics['human_money']):.2f}, min=${min(metrics['human_money'])}, max=${max(metrics['human_money'])}",
+        f"Ending Power Capacity: avg={mean(metrics['human_power_capacity']):.2f}, min={min(metrics['human_power_capacity'])}, max={max(metrics['human_power_capacity'])}",
+        "",
+        "--- Resource Market State at End Game (Average Remaining) ---",
+        f"Coal:  {resource_averages[0]:.2f}",
+        f"Oil:   {resource_averages[1]:.2f}",
+        f"Trash: {resource_averages[2]:.2f}",
+        f"Nuke:  {resource_averages[3]:.2f}",
+        "",
+        "--- Average Resources Consumed Per Game ---",
+        f"Coal:  Human={avg_consumed['coal']['human']:.2f}, Automa={avg_consumed['coal']['automa']:.2f}",
+        f"Oil:   Human={avg_consumed['oil']['human']:.2f}, Automa={avg_consumed['oil']['automa']:.2f}",
+        f"Trash: Human={avg_consumed['trash']['human']:.2f}, Automa={avg_consumed['trash']['automa']:.2f}",
+        f"Nuke:  Human={avg_consumed['nuke']['human']:.2f}, Automa={avg_consumed['nuke']['automa']:.2f}",
+        "",
+        "--- Outliers and Anomalies ---",
+        f"Long Games (>= 15 turns):        count={len(metrics['outliers']['long_games'])}, IDs={metrics['outliers']['long_games'][:15]}",
+        f"Short Games (<= 9 turns):       count={len(metrics['outliers']['short_games'])}, IDs={metrics['outliers']['short_games'][:15]}",
+        f"Unpowered Endgame (Cap < Built): count={len(metrics['outliers']['unpowered_endgame'])}, IDs={metrics['outliers']['unpowered_endgame'][:15]}",
+        f"Cash Starvation (Money <= $5):   count={len(metrics['outliers']['low_cash_human'])}, IDs={metrics['outliers']['low_cash_human'][:15]}",
+        f"Tiebreaker Decided:              count={len(metrics['outliers']['tiebreakers'])}, IDs={metrics['outliers']['tiebreakers'][:15]}",
+    ]
+
+    summary_output = "\n".join(summary_lines)
+
+    for line in summary_lines:
+        debug.result(line)
+
+    debug.save_summary(summary_output + "\n")

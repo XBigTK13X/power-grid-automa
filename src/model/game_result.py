@@ -49,14 +49,14 @@ class GameResult:
         if competing_score == self.human_score:
             if self.human_power_capacity < self.human_score:
                 debug.sim(f"{competing_automa} wins")
-                self.tiebreaker_automa_win = True
+                self.automa_tiebreaker_win = True
                 return False
             else:
                 if self.human_money <= self.automa_tiebreaker:
                     debug.sim(
                         f"Automa wins with tiebreaker. Human money ${self.human_money} to {self.automa_tiebreaker}"
                     )
-                    self.tiebreaker_automa_win = True
+                    self.automa_tiebreaker_win = True
                     return False
                 else:
                     debug.sim(
